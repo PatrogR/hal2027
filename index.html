@@ -15,7 +15,7 @@
   Almost everything is drawn by JavaScript (js/main.js and the modules it
   imports). Elements with an id are "slots" that the scripts fill in:
     #tabs, #menuToggle, #account – view navigation and account buttons
-    #demo, #warn      – demo-mode banner and HoP sensitive-data warning
+    #demo, #warn      – demo-mode banner and Patrolowa sensitive-data warning
     #viewName, #barActions – current view title and its action buttons
     #plan, #board     – masterplan and kanban containers (one is hidden)
     #planControls, #boardControls – mobile navigation controls
@@ -31,7 +31,7 @@
     <input id="accessPassword" type="password" autocomplete="current-password" required>
     <p class="err" id="accessError" role="alert"></p>
     <button class="btn red" type="submit">Otwórz aplikację</button>
-    <a class="access-login-link" id="accessHopLogin" href="#">Logowanie Patrolowi</a>
+    <a class="access-login-link" id="accessHopLogin" href="#">Logowanie Patrolowej</a>
   </form>
 </section>
 
@@ -42,7 +42,7 @@
   <div class="account" id="account"></div>
 </header>
 
-<p class="demo" id="demo" hidden><span class="long">Tryb podglądu: dane zapisują się tylko w tej przeglądarce. Konta testowe: admin / demo (administrator) oraz hop / demo.</span><span class="short">Tryb podglądu (dane lokalne). Konta: admin / demo, hop / demo.</span></p>
+<p class="demo" id="demo" hidden><span class="long">Tryb podglądu: dane zapisują się tylko w tej przeglądarce. Konta testowe: admin / demo (administrator) oraz Patrolowa: hop / demo.</span><span class="short">Tryb podglądu (dane lokalne). Konta: admin / demo, Patrolowa: hop / demo.</span></p>
 <p class="warn" id="warn" hidden><span class="long">Pamiętaj: w tym systemie nie wolno wpisywać danych wrażliwych ani danych osobowych uczestników, np. numerów PESEL, informacji o zdrowiu, adresów, numerów telefonów czy danych z kart kwalifikacyjnych.</span><span class="short">Nie wpisuj tu danych wrażliwych ani danych osobowych uczestników.</span><button class="x" id="warnClose" type="button" aria-label="Ukryj przypomnienie" title="Ukryj przypomnienie">×</button></p>
 
 <div class="bar">
@@ -129,6 +129,6 @@
   The ?v= suffix forces browsers to fetch the new file after an update;
   change it whenever you deploy a new version.
 -->
-<script type="module" src="js/main.js?v=2026-11-08-client-gate-7" onerror="window.__halFail('Nie udało się wczytać plików aplikacji.', 'Sprawdź, czy na serwerze są foldery css i js z całą zawartością (także js/store) i czy nazwy plików się zgadzają. Potem odśwież stronę (Ctrl+F5).', 'load')"></script>
+<script type="module" src="js/main.js?v=2026-11-08-patrolowa-2" onerror="window.__halFail('Nie udało się wczytać plików aplikacji.', 'Sprawdź, czy na serwerze są foldery css i js z całą zawartością (także js/store) i czy nazwy plików się zgadzają. Potem odśwież stronę (Ctrl+F5).', 'load')"></script>
 </body>
 </html>

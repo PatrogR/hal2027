@@ -2,7 +2,7 @@
    style.css – all visual styling for the HAL 2027 board.
 
    Colour system:
-   - :root holds the shared palette (greys, red for HoP mode).
+   - :root holds the shared palette (greys, red for Patrolowa mode).
    - --c, --c-d, --c-t are the "current board" colours:
        --c   main colour (borders, buttons),
        --c-d darker shade (button borders),
@@ -97,11 +97,11 @@ body { background: #fff; color: var(--ink); display: flex; flex-direction: colum
   background: #FBE9EA; color: var(--red-t); font-weight: 900; font-size: .82rem;
 }
 
-/* Info bars: demo-mode notice and the HoP "no sensitive data" warning. */
+/* Info bars: demo-mode notice and the Patrolowa "no sensitive data" warning. */
 .demo, .warn { display: flex; align-items: flex-start; gap: 8px; margin: 0 20px 10px; padding: 8px 12px; font-size: .86rem; font-weight: 700; }
 /* Each bar has a long text (desktop) and a short one (phones). */
 .short { display: none; }
-/* "×" button that hides the HoP warning until the page is reloaded. */
+/* "×" button that hides the Patrolowa warning until the page is reloaded. */
 .x {
   flex: none; margin-left: auto; width: 1.8rem; height: 1.8rem; padding: 0; cursor: pointer;
   background: none; border: none; border-radius: 8px; color: inherit; font: inherit; font-size: 1.2rem; font-weight: 900; line-height: 1;
@@ -146,9 +146,13 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .due.soon { background: #E8890C; color: #fff; }
 .due.overdue { background: var(--red); color: #fff; }
 .owner::before { content: ""; flex: none; width: .6em; height: .6em; border-radius: 50%; background: var(--c); }
-.col[data-col="done"] .card { background: #F1F7E5; border-color: #B5CA86; }
-.col[data-col="done"] .card h3 { color: #64743C; }
-.col[data-col="done"] .card p, .col[data-col="done"] .card .owner { color: #68705B; }
+.col[data-col="done"] .card,
+.col[data-col="done"] .card:not(.soon):not(.overdue):hover {
+  background: color-mix(in srgb, var(--c) 12%, #fff);
+  border-color: color-mix(in srgb, var(--c) 42%, #fff);
+}
+.col[data-col="done"] .card h3 { color: color-mix(in srgb, var(--c-t) 78%, #555); }
+.col[data-col="done"] .card p, .col[data-col="done"] .card .owner { color: #646464; }
 .approve-task { align-self: flex-start; margin-top: 10px; }
 .card.dragging { opacity: .35; }
 /* Insertion line shown while dragging a card. */
@@ -240,7 +244,7 @@ textarea { min-height: 120px; resize: vertical; line-height: 1.45; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
 
 /* Button variants: default = current board colour, .ghost = neutral,
-   .red = HoP actions, .danger = delete (.armed after the first click). */
+   .red = Patrolowa actions, .danger = delete (.armed after the first click). */
 .btn { font: inherit; font-weight: 800; font-size: .95rem; cursor: pointer; padding: .6em 1.1em; border-radius: 12px; border: 2.5px solid var(--c-d); background: var(--c); color: #fff; }
 .btn:disabled { opacity: .6; cursor: wait; }
 .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
@@ -253,7 +257,7 @@ textarea { min-height: 120px; resize: vertical; line-height: 1.45; }
 .overlay { position: fixed; inset: 0; z-index: 50; padding: 16px; display: grid; place-items: center; background: rgba(59, 59, 59, .45); }
 .modal { width: min(520px, 100%); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain; background: #fff; border: 3px solid var(--c); border-radius: 16px; padding: 20px; }
 .modal.wide { width: min(920px, 100%); }
-/* HoP dialogs always use red, whatever board is open. */
+/* Patrolowa dialogs always use red, whatever board is open. */
 .modal.red { --c: #D6303C; --c-d: #A8212B; --c-t: #AE2330; }
 .modal h2 { margin: 0 0 4px; font-size: 1.2rem; font-weight: 900; color: var(--c-t); }
 .modal h3 { margin: 22px 0 6px; font-size: 1rem; font-weight: 900; }

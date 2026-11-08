@@ -17,13 +17,13 @@
  *   main → views / auth → plan / kanban / admin → state → ui → config
  * ---------------------------------------------------------------------------
  */
-import { configured, VIEWS } from "./config.js?v=2026-11-08-client-gate-4";
+import { configured, VIEWS } from "./config.js?v=2026-11-08-patrolowa";
 import { $, el, openClosers } from "./ui.js";
 import { state } from "./state.js";
 import { createFirebaseStore } from "./store/firebase.js";
 import { createDemoStore } from "./store/demo.js";
-import { openLogin, renderAccount } from "./auth.js?v=2026-11-08-cancel-gate";
-import { openView, viewFromHash } from "./views.js";
+import { openLogin, renderAccount } from "./auth.js?v=2026-11-08-patrolowa";
+import { openView, viewFromHash } from "./views.js?v=2026-11-08-patrolowa";
 
 // Shows a start-up error on the page. Uses the safety net from index.html;
 // falls back to a plain message if index.html is an old version without it.

@@ -1,6 +1,6 @@
 # Tablica zadań HAL 2027
 
-Masterplan i kanbany patroli (Program, Kwaterka, Organizacja) oraz chroniona tablica HoP.
+Masterplan i kanbany patroli (Program, Kwaterka, Organizacja) oraz chroniona tablica dla Patrolowych.
 Strona statyczna (GitHub Pages) + Firebase (Firestore i Authentication).
 
 ## Struktura
@@ -35,7 +35,7 @@ python -m http.server 8000
 ```
 
 i otwórz `http://localhost:8000`. Dopóki `apiKey` w `js/config.js` zaczyna się od `WKLEJ`,
-działa tryb podglądu (konta testowe: admin / demo, hop / demo).
+działa tryb podglądu (konta testowe: admin / demo oraz Patrolowa: hop / demo).
 
 Wspólne hasło jest jedynie ekranem wejściowym po stronie przeglądarki. Domyślne
 hasło (`macandcheese`) znajduje się w `js/config.js`; admin może ustawić inne,
@@ -55,7 +55,7 @@ ominąć ekran, więc nie traktuj go jako ochrony danych.
 - Dialogi mieszczą się w wysokości ekranu, a formularze i ich przyciski
   pozostają wygodne przy obsłudze dotykowej.
 - Przycisk logowania ma stonowaną ikonę wejścia zamiast kłódki.
-- Po zalogowaniu HoP jest widoczna czerwona plakietka statusu zamiast ramki
+- Po zalogowaniu Patrolowa widzi czerwoną plakietkę statusu zamiast ramki
   wokół całej strony; administratora oznacza ikona panelu.
 - Etykieta „Organizacja” w masterplanie skraca się do „Org.”, jeśli pełna
   nazwa nie mieści się w dostępnej przestrzeni.
@@ -67,7 +67,7 @@ ominąć ekran, więc nie traktuj go jako ochrony danych.
 - Goście mogą tworzyć i edytować zadania oraz przenosić je między kolumnami
   do „Do sprawdzenia”. Przy tworzeniu aplikacja prosi o potwierdzenie zapisu;
   goście nie mogą usuwać zadań.
-- HoP i administratorzy mogą zatwierdzać zadania z „Do sprawdzenia” do
+- Osoby z patrolu i administratorzy mogą zatwierdzać zadania z „Do sprawdzenia” do
   „Gotowe”, anulować zatwierdzenie w formularzu zadania oraz usuwać zadania.
   Te ograniczenia są sprawdzane również przez
   `firestore.rules`, nie tylko przez interfejs.
@@ -91,14 +91,14 @@ ominąć ekran, więc nie traktuj go jako ochrony danych.
 11. Utwórz repozytorium (publiczne – darmowe Pages wymagają publicznego), np. `hal2027`.
 12. Wgraj zawartość folderu z zachowaniem struktury (Add file → Upload files, przeciągnij foldery `css` i `js` oraz pliki).
 13. Settings → Pages → Deploy from a branch → `main` / `(root)` → Save. Po 1–2 minutach strona działa pod `https://LOGIN.github.io/hal2027/`. Zaznacz „Enforce HTTPS”.
-14. Otwórz stronę, wpisz wspólne hasło aplikacji, zaloguj się jako admin i załóż konta HoP w panelu.
+14. Otwórz stronę, wpisz wspólne hasło aplikacji, zaloguj się jako admin i załóż konta Patrolowych w panelu.
 
 ### C. SharePoint
 15. Dodaj `LOGIN.github.io` (dokładnie ten adres) do dozwolonych domen osadzania (HTML Field Security – może to wymagać admina witryny).
 16. Edytuj stronę → web part Osadzanie → kod:
     `<iframe src="https://LOGIN.github.io/hal2027/#plan" width="100%" height="800" style="border:0"></iframe>`
     (zamiast `#plan` można dać `#program`, `#kwaterka`, `#organizacja`).
-17. Sprawdź wspólne hasło aplikacji oraz logowanie HoP wewnątrz SharePointa.
+17. Sprawdź wspólne hasło aplikacji oraz logowanie Patrolowej wewnątrz SharePointa.
 
 ### D. Zabezpieczenia kont
 18. Weryfikacja dwuetapowa na koncie Google (Firebase) i GitHub.

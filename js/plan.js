@@ -16,7 +16,7 @@
  *   - An event crossing a block boundary (e.g. March → April) is "clipped"
  *     and drawn once in each block.
  *
- * Everyone can view the masterplan; only logged-in HoP members get clickable
+ * Everyone can view the masterplan; only logged-in Patrolowe get clickable
  * events and the "add event" button. Rules enforce the same on the server.
  * ---------------------------------------------------------------------------
  */
@@ -199,7 +199,7 @@ $("#plan")?.addEventListener("scroll", updateTimelineMonthFromScroll, { passive:
 window.addEventListener("scroll", updateTimelineMonthFromScroll, { passive: true });
 
 // One event box, always a <button>:
-//   - HoP members: opens the edit dialog,
+//   - Patrolowa: opens the edit dialog,
 //   - guests: opens a read-only preview with the full name and dates.
 // The preview matters on touch screens, where hover tooltips (title) don't
 // exist and long names are cut off inside small boxes.
@@ -323,7 +323,7 @@ export function openEventInfo(ev) {
 /* ---------- Event dialog ---------- */
 
 /**
- * Add/edit dialog for a masterplan event (HoP only).
+ * Add/edit dialog for a masterplan event (Patrolowa only).
  *   ev = null   → new event,
  *   ev = object → edit that event (with a delete button).
  * Dates are chosen as half-month slots (From/To dropdowns).

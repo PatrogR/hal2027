@@ -29,7 +29,7 @@ export const CONFIG = {
     appId: "1:555334332368:web:69305c57b94d87087ad3d5"
   },
 
-  // Firebase Authentication requires an e-mail address, but HoP members log in
+  // Firebase Authentication requires an e-mail address, but Patrolowe log in
   // with a plain login. The login "jan.kowalski" is turned into the pseudo
   // e-mail "jan.kowalski@hal2027.local". The domain never receives any mail;
   // it only has to look like a valid e-mail address.
@@ -67,7 +67,7 @@ export const configured = !CONFIG.firebase.apiKey.startsWith("WKLEJ");
  * on <body>, which switches the colour scheme in style.css.
  *   tab     – short uppercase label on the tab button,
  *   name    – full name shown above the board,
- *   hopOnly – view is hidden from guests and only reachable when logged in.
+ *   hopOnly – view is hidden from guests and only reachable when Patrolowe log in.
  * The order of keys is the order of the tabs.
  */
 export const VIEWS = {
@@ -75,7 +75,7 @@ export const VIEWS = {
   program:     { tab: "Program",     name: "Patrol Programowy" },
   kwaterka:    { tab: "Kwaterka",    name: "Patrol Kwatermistrzowski" },
   organizacja: { tab: "Organizacja", name: "Patrol Organizacyjny" },
-  hop:         { tab: "HoP",         name: "HoP", hopOnly: true }
+  hop:         { tab: "Patrolowi", name: "Patrolowi", hopOnly: true }
 };
 
 /**
@@ -125,7 +125,7 @@ export const slotLabel = i => {
   return `${m.name} ${m.year}, ${i % 2 ? "2." : "1."} połowa`;
 };
 
-/* ---------- HoP logins ---------- */
+/* ---------- Patrolowe logins ---------- */
 
 // Normalises what the user typed: trims spaces and lower-cases, so
 // "Jan.Kowalski " and "jan.kowalski" are the same login.

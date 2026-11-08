@@ -124,7 +124,7 @@ export const openClosers = new Set();
  *
  * Options:
  *   wide    – wider window (admin panel),
- *   red     – red HoP colour scheme instead of the current board colour,
+ *   red     – red Patrolowa colour scheme instead of the current board colour,
  *   onClose – callback run once when the dialog closes (e.g. to unsubscribe
  *             from live database updates).
  *

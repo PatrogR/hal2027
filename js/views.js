@@ -11,7 +11,7 @@
  * main.js) → openView() → subscribes to live data → renderPlan()/renderBoard().
  * ---------------------------------------------------------------------------
  */
-import { VIEWS } from "./config.js";
+import { VIEWS } from "./config.js?v=2026-11-08-patrolowa";
 import { $, el, toast, readErrMsg } from "./ui.js";
 import { state } from "./state.js";
 import { renderPlan, openEvent } from "./plan.js";
@@ -23,7 +23,7 @@ import { renderBoard } from "./kanban.js";
 let unsub = null;
 
 // Reads the view ID from the URL hash. Falls back to the masterplan when the
-// hash is empty/unknown, or when a guest tries to open a HoP-only view.
+// hash is empty/unknown, or when a guest tries to open the Patrolowa-only view.
 export const viewFromHash = () => {
   const h = location.hash.slice(1);
   if (!VIEWS[h]) return "plan";
@@ -33,7 +33,7 @@ export const viewFromHash = () => {
 
 /* ---------- Tabs ---------- */
 
-// (Re)draws the tab buttons. HoP-only tabs are skipped for guests – hiding
+// (Re)draws the tab buttons. Patrolowa-only tabs are skipped for guests – hiding
 // them is just UI; the actual protection is in firestore.rules.
 // Clicking a tab updates the hash; the "hashchange" listener opens its view.
 export function renderTabs() {
@@ -82,7 +82,7 @@ document.addEventListener("keydown", e => {
  * is simple and fast enough for a few dozen cards.
  */
 export function openView(v) {
-  if (VIEWS[v]?.hopOnly && !state.me) v = "plan";   // guests never see HoP views
+  if (VIEWS[v]?.hopOnly && !state.me) v = "plan";   // guests never see the Patrolowa view
   state.view = v;
   closeMobileMenu();
 
@@ -129,7 +129,7 @@ export function openView(v) {
 }
 
 // Buttons on the right of the view title. Currently only "+ Dodaj wydarzenie"
-// (add event), shown on the masterplan to logged-in HoP members.
+// (add event), shown on the masterplan to logged-in Patrolowe.
 export function renderBarActions() {
   const box = $("#barActions");
   if (!box) return;

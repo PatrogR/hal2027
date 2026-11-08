@@ -8,7 +8,7 @@
  *   shared between people or devices.
  * - Implements EXACTLY the same methods as store/firebase.js, so the rest of
  *   the app cannot tell the difference. Use it to test UI changes safely.
- * - Test accounts: admin / demo (administrator) and hop / demo.
+ * - Test accounts: admin / demo (administrator) and Patrolowa login "hop" / demo.
  *   Passwords are stored in plain text – acceptable ONLY because this is a
  *   local demo. Never copy this approach to real data.
  * - To reset the demo, delete the localStorage key below in DevTools

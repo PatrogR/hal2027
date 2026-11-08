@@ -3,7 +3,7 @@
  * ---------------------------------------------------------------------------
  * Kanban boards: columns, task cards, drag & drop, deadlines, task dialog.
  *
- * The same code serves all four boards (three patrols + HoP); the open board
+ * The same code serves all four boards (three patrols + Patrolowa); the open board
  * is state.view and its tasks are in state.tasks (sorted by `order`).
  *
  * Ordering: each task has a numeric `order`. New tasks go to the end

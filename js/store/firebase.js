@@ -62,8 +62,8 @@ export async function createFirebaseStore() {
   const live = (q, on, err) => F.onSnapshot(q, s => on(s.docs.map(d => ({ id: d.id, ...d.data() }))), err);
 
   // Reads members/{uid} for a signed-in Firebase user and returns
-  // { uid, login, role } if the account is an ACTIVE HoP member, else null.
-  // A Firebase Auth account alone is not enough to be HoP: the member
+  // { uid, login, role } if the account belongs to an active Patrolowa, else null.
+  // A Firebase Auth account alone is not enough for this role: the member
   // document is what grants access (and firestore.rules check the same doc).
   async function loadMember(user) {
     try {
@@ -161,7 +161,7 @@ export async function createFirebaseStore() {
     // Live list of all member documents, sorted by login.
     subscribeMembers: (on, err) => live(F.query(F.collection(db, "members"), F.orderBy("login")), on, err),
 
-    // Creates a new HoP account. Problem: createUserWithEmailAndPassword()
+    // Creates a new Patrolowa account. Problem: createUserWithEmailAndPassword()
     // automatically signs in as the NEW user, which would log the admin out.
     // Solution: create the account through a temporary second Firebase app
     // instance with its own, in-memory auth session, then throw it away.

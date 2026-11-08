@@ -13,15 +13,15 @@ import { toast, errMsg } from "./ui.js";
 export const state = {
   store: null,   // data store (store/firebase.js or store/demo.js), set in main.js
   view: "plan",  // currently open view: plan | program | kwaterka | organizacja | hop
-  me: null,      // logged-in HoP member { uid, login, role } or null for guests
+  me: null,      // logged-in Patrolowa { uid, login, role } or null for guests
   tasks: [],     // tasks of the currently open board, sorted by `order`
   plan: [],      // all masterplan events
   planLoaded: false, // true after the first masterplan data arrived (until then: "Ładowanie…")
-  warnHidden: false  // HoP closed the "no sensitive data" bar (until page reload)
+  warnHidden: false  // Patrolowa closed the "no sensitive data" bar (until page reload)
 };
 
 /**
- * Runs a database operation and, if it succeeds and a HoP member is logged
+ * Runs a database operation and, if it succeeds and a Patrolowa is logged in
  * in, writes an entry to the activity log ("logs" collection).
  *
  *   act(state.store.addTask(board, data), "Dodanie zadania", "Program: „Title”")

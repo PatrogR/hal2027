@@ -2,7 +2,7 @@
  * admin.js
  * ---------------------------------------------------------------------------
  * Admin panel (opened by the console-icon square, visible to admins only):
- *   - list of HoP accounts with activate/deactivate,
+ *   - list of Patrolowe accounts with activate/deactivate,
  *   - form to create a new account,
  *   - form to change the admin's OWN password,
  *   - activity log (newest 300 entries).
@@ -11,7 +11,7 @@
  * only admins can read members/logs or change accounts.
  *
  * Limitation: the free Firebase plan offers no way for the browser to reset
- * ANOTHER user's password. If a HoP member forgets theirs, deactivate the
+ * ANOTHER user's password. If a Patrolowa forgets her password, deactivate the
  * account and create a new one with a different login.
  * ---------------------------------------------------------------------------
  */
@@ -21,7 +21,7 @@ import { state, act } from "./state.js";
 
 /**
  * "Change my password" form – only reachable from the admin panel, because
- * regular HoP members are not allowed to change their own password.
+ * regular Patrolowe nie mogą samodzielnie zmieniać hasła.
  * Requires the current password (Firebase re-authenticates with it).
  */
 export function ownPasswordForm() {
@@ -111,6 +111,7 @@ export function openAdmin() {
     const d = v?.toDate ? v.toDate() : v ? new Date(v) : null;
     return d ? d.toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" }) : "teraz";
   };
+  const displayDetails = value => String(value || "").replace(/\bHoP(?=:|\))/g, "Patrolowa");
 
   // Accounts table. The admin's own row has no button: rules forbid an admin
   // to modify their own member document (prevents accidental self-lockout).
@@ -120,8 +121,8 @@ export function openAdmin() {
       return el("tr", {},
         // The role is shown in its own column on desktop (.c-role) and,
         // because that column is hidden on phones, also under the login.
-        el("td", {}, m.login, el("span", { class: "role-inline hint", text: m.role === "admin" ? "Administrator" : "HoP" })),
-        el("td", { class: "c-role", text: m.role === "admin" ? "Administrator" : "HoP" }),
+        el("td", {}, m.login, el("span", { class: "role-inline hint", text: m.role === "admin" ? "Administrator" : "Patrolowy" })),
+        el("td", { class: "c-role", text: m.role === "admin" ? "Administrator" : "Patrolowy" }),
         el("td", {}, el("span", { class: m.active ? "tag" : "tag off", text: m.active ? "Aktywne" : "Wyłączone" })),
         el("td", { class: "nowrap" }, self ? el("span", { class: "hint", text: "To Ty" }) :
           el("button", {
@@ -138,7 +139,7 @@ export function openAdmin() {
       el("td", { class: "nowrap", text: fmt(l.at) }),
       el("td", { text: l.login }),
       el("td", { text: l.action }),
-      el("td", { text: l.details || "" })
+      el("td", { text: displayDetails(l.details) })
     )) : [el("tr", {}, el("td", { colspan: "4", class: "hint", text: "Brak wpisów." }))]));
   };
 
@@ -146,7 +147,7 @@ export function openAdmin() {
   // (type="text") so the admin can read it out / copy it to the person.
   const loginIn = el("input", { id: "a-login", required: true, autocapitalize: "none", spellcheck: "false", placeholder: "np. jan.kowalski" });
   const pwdIn = el("input", { id: "a-pwd", type: "text", required: true, minlength: "8", autocomplete: "off" });
-  const roleIn = el("select", { id: "a-role" }, el("option", { value: "hop" }, "HoP"), el("option", { value: "admin" }, "Administrator"));
+  const roleIn = el("select", { id: "a-role" }, el("option", { value: "hop" }, "Patrolowy"), el("option", { value: "admin" }, "Administrator"));
   const err = el("p", { class: "err" });
   const createBtn = el("button", { class: "btn red", type: "submit", text: "Utwórz konto" });
 
@@ -162,7 +163,7 @@ export function openAdmin() {
       createBtn.disabled = true;
       try {
         await state.store.createMember(login, pwdIn.value, roleIn.value);
-        state.store.log(state.me, "Utworzenie konta", `${login} (${roleIn.value === "admin" ? "administrator" : "HoP"})`).catch(() => {});
+        state.store.log(state.me, "Utworzenie konta", `${login} (${roleIn.value === "admin" ? "administrator" : "Patrolowy"})`).catch(() => {});
         toast(`Konto ${login} utworzone. Przekaż hasło tej osobie osobiście.`);
         loginIn.value = ""; pwdIn.value = "";
       } catch (ex) {
@@ -182,13 +183,13 @@ export function openAdmin() {
     el("div", { class: "modal-head" },
       el("h2", { id: "a-h", text: "Panel admina" }),
       el("button", { class: "btn ghost small", type: "button", text: "Zamknij", onclick: () => close() })),
-    el("h3", { text: "Konta HoP" }),
+    el("h3", { text: "Konta Patrolowych" }),
     el("div", { class: "tbl-wrap" }, el("table", {},
       el("thead", {}, el("tr", {}, el("th", { text: "Login" }), el("th", { class: "c-role", text: "Rola" }), el("th", { text: "Status" }), el("th", { text: "" }))),
       membersBody)),
     el("h3", { text: "Dodaj konto" }),
     createForm, err,
-    el("p", { class: "hint", text: "HoP nie zmieniają haseł samodzielnie i nie da się ich tu zresetować. Jeśli ktoś zapomni hasła, dezaktywuj jego konto i utwórz nowe z innym loginem." }),
+    el("p", { class: "hint", text: "Patrolowy nie może samodzielnie zmienić hasła ani go tu zresetować. Jeśli zapomni hasła, dezaktywuj konto i utwórz nowe z innym loginem." }),
     el("h3", { text: "Moje hasło" }),
     ownPasswordForm(),
     el("h3", { text: "Hasło dostępu do aplikacji" }),

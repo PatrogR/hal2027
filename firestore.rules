@@ -8,8 +8,8 @@
 //
 // Access summary:
 //   patrol boards (program/kwaterka/organizacja) – anyone reads/writes before review;
-//     active HoP/admin members may approve into "done" or delete
-//   HoP board, masterplan editing                – active HoP/admin members
+//     active Patrolowe/admin members may approve into "done" or delete
+//   Patrolowa board, masterplan editing            – active Patrolowe/admin members
 //   masterplan reading                           – everyone
 //   member accounts, activity log reading        – admins only
 // ===========================================================================
@@ -45,7 +45,7 @@ service cloud.firestore {
     }
 
     // Guests may create and update tasks until review. Only active members
-    // (HoP or admin) may move tasks into or out of "done".
+    // (Patrolowe or admin) may move tasks into or out of "done".
     function guestTaskColumnAllowed() {
       return resource.data.column == 'done'
         ? request.resource.data.column == 'done'
@@ -91,7 +91,7 @@ service cloud.firestore {
         && d.active is bool;
     }
 
-    // ---------- Kanban boards: patrols open to all, HoP board members only ----------
+    // ---------- Kanban boards: patrols open to all, Patrolowa board members only ----------
     // Path: boards/{board}/tasks/{task}. Any other board name is rejected.
     match /boards/{board}/tasks/{task} {
       allow read: if isPatrolBoard(board) || (board == 'hop' && isMember());
@@ -106,7 +106,7 @@ service cloud.firestore {
       allow delete: if isMember() && (isPatrolBoard(board) || board == 'hop');
     }
 
-    // ---------- Masterplan: everyone reads, HoP members edit ----------
+    // ---------- Masterplan: everyone reads, Patrolowe members edit ----------
     match /plan/{eventId} {
       allow read: if true;
       allow create, update: if isMember() && validEvent();

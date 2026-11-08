@@ -1,25 +1,25 @@
 /**
  * auth.js
  * ---------------------------------------------------------------------------
- * Top-bar account buttons and the HoP login / logout dialogs.
+ * Top-bar account buttons and Patrolowa login / logout dialogs.
  *
  * Guests see one red square (lock icon) that opens the login dialog.
- * Logged-in HoP members see a logout square, and admins additionally a
+ * Logged-in Patrolowe see a logout square, and admins additionally a
  * console square that opens the admin panel (admin.js).
  *
- * HoP members cannot change their own password (product decision); only the
+ * Patrolowe cannot change their own password (product decision); only the
  * admin can change THEIR OWN password, inside the admin panel.
  * ---------------------------------------------------------------------------
  */
-import { normLogin } from "./config.js";
+import { normLogin } from "./config.js?v=2026-11-08-patrolowa";
 import { $, el, iconButton, openModal, authMsg } from "./ui.js";
 import { state } from "./state.js";
-import { openAdmin } from "./admin.js";
+import { openAdmin } from "./admin.js?v=2026-11-08-patrolowa";
 
 /**
  * Redraws everything that depends on being logged in:
  *  - the status badge and square buttons in #account,
- *  - the "no sensitive data" warning bar (#warn), shown only to HoP.
+ *  - the "no sensitive data" warning bar (#warn), shown only to Patrolowe.
  * Called by main.js on start and after every login/logout.
  */
 export function renderAccount() {
@@ -31,15 +31,15 @@ export function renderAccount() {
   if (!box) return;
   box.replaceChildren();
   if (!state.me) {
-    box.append(iconButton("login", "Zaloguj (HoP)", openLogin));
+    box.append(iconButton("login", "Zaloguj (Patrolowa)", openLogin));
     return;
   }
   if (state.me.role === "hop") {
     box.append(el("span", {
       class: "hop-status",
-      text: "HoP",
+      text: "Patrolowa",
       title: `Zalogowano jako ${state.me.login}`,
-      "aria-label": `Zalogowano jako HoP, ${state.me.login}`
+      "aria-label": `Zalogowano jako ${state.me.login} (Patrolowa)`
     }));
   }
   box.append(iconButton("logout", `Wyloguj (${state.me.login})`, confirmLogout));
@@ -76,7 +76,7 @@ export function openLogin({ onCancel } = {}) {
       } finally { btn.disabled = false; }
     }
   },
-    el("h2", { id: "l-h", text: "Logowanie HoP" }),
+    el("h2", { id: "l-h", text: "Logowanie Patrolowej" }),
     el("label", { for: "l-login", text: "Login" }), loginIn,
     el("label", { for: "l-pwd", text: "Hasło" }), pwdIn,
     err,
