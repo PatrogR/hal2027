@@ -12,9 +12,9 @@
  * If you change any of those IDs, remember to update firestore.rules too,
  * because the database rules validate the same values on the server.
  *
- * SECURITY NOTE: this file is public (anyone can read it in the browser).
- * The Firebase config below is NOT a secret – it only identifies the project.
- * Never put passwords, service-account keys or other secrets here.
+ * The Firebase config below is public and only identifies the project.
+ * DEFAULT_APP_PASSWORD below is also public; it only hides the page behind a
+ * prompt and must not be used to protect data or accounts.
  * ---------------------------------------------------------------------------
  */
 
@@ -45,6 +45,11 @@ export const CONFIG = {
   // firestore.rules allows slot numbers up to 47 (24 months).
   plan: { startMonth: 10, startYear: 2026, months: 10, perRow: 5 }
 };
+
+// This only hides the app behind a client-side prompt; it is visible in the
+// page source and must never be treated as data protection.
+export const DEFAULT_APP_PASSWORD = "macandcheese";
+export const APP_ACCESS_SESSION_KEY = "hal2027-app-access";
 
 // Firebase JS SDK version loaded from Google's CDN (gstatic.com).
 // Pinned to an exact version so an SDK update can never change behaviour

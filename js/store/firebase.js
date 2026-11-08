@@ -19,10 +19,10 @@
  * Who may read/write what is decided ONLY by firestore.rules, not here.
  * ---------------------------------------------------------------------------
  */
-import { CONFIG, FIREBASE_VERSION, toEmail } from "../config.js";
+import { APP_ACCESS_SESSION_KEY, CONFIG, DEFAULT_APP_PASSWORD, FIREBASE_VERSION, toEmail } from "../config.js?v=2026-11-08-client-gate-3";
 
 export async function createFirebaseStore() {
-  // Load the three Firebase SDK modules straight from Google's CDN.
+  // Load the Firebase SDK modules straight from Google's CDN.
   // No build step / npm needed – the browser imports them as ES modules.
   const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/`;
   const [A, F, U] = await Promise.all([
@@ -39,6 +39,14 @@ export async function createFirebaseStore() {
   // iframe), fall back to memory only: the user stays logged in until reload.
   try { await U.setPersistence(auth, U.browserSessionPersistence); }
   catch { await U.setPersistence(auth, U.inMemoryPersistence); }
+
+  await new Promise(resolve => {
+    let unsubscribe;
+    unsubscribe = U.onAuthStateChanged(auth, () => {
+      unsubscribe();
+      resolve();
+    });
+  });
 
   // Server timestamp: the time is set by Google's servers, not the user's
   // clock (which may be wrong or manipulated).
@@ -67,6 +75,24 @@ export async function createFirebaseStore() {
   }
 
   return {
+    /* ---------- Shared app access ---------- */
+
+    checkAppAccess: async () => {
+      try { return sessionStorage.getItem(APP_ACCESS_SESSION_KEY) === "1"; }
+      catch { return false; }
+    },
+    unlockApp: async password => {
+      const access = await F.getDoc(F.doc(db, "settings", "appAccess"));
+      const expected = access.exists() && typeof access.data().password === "string"
+        ? access.data().password
+        : DEFAULT_APP_PASSWORD;
+      if (password !== expected) throw { code: "app/wrong-password" };
+      try { sessionStorage.setItem(APP_ACCESS_SESSION_KEY, "1"); } catch {}
+    },
+    changeAppPassword: async password => {
+      await F.setDoc(F.doc(db, "settings", "appAccess"), { password });
+    },
+
     /* ---------- Kanban tasks ---------- */
 
     // Live list of a board's tasks, sorted by `order`.
@@ -93,19 +119,30 @@ export async function createFirebaseStore() {
     async signIn(login, pwd) {
       const cred = await U.signInWithEmailAndPassword(auth, toEmail(login), pwd);
       const m = await loadMember(cred.user);
-      if (!m) { await U.signOut(auth); throw { code: "no-access" }; }
-      return m;
+      if (m) return m;
+      await U.signOut(auth);
+      throw { code: "no-access" };
     },
-    signOut: () => U.signOut(auth),
+    async signOut() { await U.signOut(auth); },
 
     // Registers a callback for login state changes: cb(member) after login
     // (also when a session is restored on page reload), cb(null) after logout.
     // Non-members are signed out silently, which then triggers cb(null).
     onAuth(cb) {
-      U.onAuthStateChanged(auth, async user => {
-        if (!user) return cb(null);
+      let deliveredMemberUid = null;
+      U.onIdTokenChanged(auth, async user => {
+        if (!user) {
+          deliveredMemberUid = null;
+          return cb(null);
+        }
+        if (deliveredMemberUid === user.uid) return;
         const m = await loadMember(user);
-        if (!m) { await U.signOut(auth); return; }
+        if (!m) {
+          await U.signOut(auth);
+          deliveredMemberUid = null;
+          return cb(null);
+        }
+        deliveredMemberUid = user.uid;
         cb(m);
       });
     },

@@ -16,6 +16,8 @@
  * ---------------------------------------------------------------------------
  */
 
+import { APP_ACCESS_SESSION_KEY, DEFAULT_APP_PASSWORD } from "../config.js?v=2026-11-08-client-gate-3";
+
 export function createDemoStore() {
   // localStorage key. Bump the version suffix if you change the data format,
   // so old demo data is ignored instead of breaking the app.
@@ -41,7 +43,7 @@ export function createDemoStore() {
 
   // Initial demo database.
   const fresh = () => ({
-    tasks: {}, plan: seedPlan, logs: [],
+    tasks: {}, plan: seedPlan, logs: [], appPassword: DEFAULT_APP_PASSWORD,
     members: [
       { id: "u-admin", login: "admin", role: "admin", active: true, pwd: "demo" },
       { id: "u-hop", login: "hop", role: "hop", active: true, pwd: "demo" }
@@ -52,6 +54,7 @@ export function createDemoStore() {
   // storage is blocked (e.g. in a sandboxed iframe).
   let data;
   try { data = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch { data = fresh(); }
+  data.appPassword ||= DEFAULT_APP_PASSWORD;
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {} };
 
   /*
@@ -98,6 +101,20 @@ export function createDemoStore() {
   const setAuth = m => { current = m; authSubs.forEach(f => f(m)); };
 
   return {
+    checkAppAccess: async () => {
+      try { return sessionStorage.getItem(APP_ACCESS_SESSION_KEY) === "1"; }
+      catch { return false; }
+    },
+    async unlockApp(password) {
+      if (password !== data.appPassword) throw { code: "app/wrong-password" };
+      try { sessionStorage.setItem(APP_ACCESS_SESSION_KEY, "1"); } catch {}
+    },
+    async changeAppPassword(password) {
+      if (current?.role !== "admin") throw { code: "permission-denied" };
+      data.appPassword = password;
+      save();
+    },
+
     /* ---------- Kanban tasks ---------- */
     subscribeTasks: (b, on) => sub("tasks:" + b, on),
     addTask: (b, t) => { (data.tasks[b] ??= []).push({ id: newId(), ...t }); return commit("tasks:" + b); },

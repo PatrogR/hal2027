@@ -57,6 +57,44 @@ export function ownPasswordForm() {
   );
 }
 
+function sharedPasswordForm() {
+  const nw = el("input", { id: "p-shared-new", type: "password", autocomplete: "new-password", required: true, minlength: "8", maxlength: "128" });
+  const rep = el("input", { id: "p-shared-rep", type: "password", autocomplete: "new-password", required: true, minlength: "8", maxlength: "128" });
+  const err = el("p", { class: "err" });
+  const btn = el("button", { class: "btn red", type: "submit", text: "Zmień wspólne hasło" });
+  return el("form", {
+    class: "create pwd",
+    onsubmit: async e => {
+      e.preventDefault();
+      err.textContent = "";
+      if (nw.value.length < 8 || nw.value.length > 128) {
+        err.textContent = "Hasło musi mieć od 8 do 128 znaków.";
+        return;
+      }
+      if (nw.value !== rep.value) {
+        err.textContent = "Nowe hasła się różnią.";
+        return;
+      }
+      btn.disabled = true;
+      try {
+        await state.store.changeAppPassword(nw.value);
+        state.store.log(state.me, "Zmiana wspólnego hasła aplikacji", "").catch(() => {});
+        toast("Wspólne hasło zmienione. Poprzednie hasło przestało działać.");
+        nw.value = rep.value = "";
+      } catch (ex) {
+        err.textContent = authMsg(ex);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  },
+    el("div", {}, el("label", { for: "p-shared-new", text: "Nowe wspólne hasło" }), nw),
+    el("div", {}, el("label", { for: "p-shared-rep", text: "Powtórz hasło" }), rep),
+    btn,
+    el("div", { style: "grid-column:1 / -1" }, err)
+  );
+}
+
 /* ---------- Admin panel ---------- */
 
 export function openAdmin() {
@@ -153,6 +191,9 @@ export function openAdmin() {
     el("p", { class: "hint", text: "HoP nie zmieniają haseł samodzielnie i nie da się ich tu zresetować. Jeśli ktoś zapomni hasła, dezaktywuj jego konto i utwórz nowe z innym loginem." }),
     el("h3", { text: "Moje hasło" }),
     ownPasswordForm(),
+    el("h3", { text: "Hasło dostępu do aplikacji" }),
+    el("p", { class: "hint", text: "Hasło jest przechowywane jawnie w Firestore i sprawdzane w przeglądarce. To tylko ekran wejściowy — nie zabezpiecza danych przed osobami znającymi adres aplikacji." }),
+    sharedPasswordForm(),
     el("h3", { text: "Dziennik zdarzeń" }),
     el("div", { class: "tbl-wrap log" }, el("table", {},
       el("thead", {}, el("tr", {}, el("th", { text: "Kiedy" }), el("th", { text: "Kto" }), el("th", { text: "Co" }), el("th", { text: "Szczegóły" }))),

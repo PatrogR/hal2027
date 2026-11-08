@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <!-- All styling lives in css/style.css -->
-<link rel="stylesheet" href="css/style.css?v=2026-11-08-kanban-8">
+<link rel="stylesheet" href="css/style.css?v=2026-11-08-client-gate">
 </head>
 <!--
   index.html – page skeleton only.
@@ -22,6 +22,18 @@
   data-board on <body> selects the colour scheme (see css/style.css).
 -->
 <body data-board="plan">
+
+<section class="access-gate" id="accessGate" aria-labelledby="accessTitle">
+  <form class="access-card" id="accessForm">
+    <h1 id="accessTitle">Obóz 7 ŁDW 2027</h1>
+    <p>Aby otworzyć aplikację, wpisz wspólne hasło.</p>
+    <label for="accessPassword">Hasło</label>
+    <input id="accessPassword" type="password" autocomplete="current-password" required>
+    <p class="err" id="accessError" role="alert"></p>
+    <button class="btn red" type="submit">Otwórz aplikację</button>
+    <a class="access-login-link" id="accessHopLogin" href="#">Logowanie Patrolowi</a>
+  </form>
+</section>
 
 <header class="top">
   <h1 class="brand">Obóz 7 ŁDW 2027<small>Masterplan i zadania patroli</small></h1>
@@ -117,6 +129,6 @@
   The ?v= suffix forces browsers to fetch the new file after an update;
   change it whenever you deploy a new version.
 -->
-<script type="module" src="js/main.js?v=2026-11-08-kanban-8" onerror="window.__halFail('Nie udało się wczytać plików aplikacji.', 'Sprawdź, czy na serwerze są foldery css i js z całą zawartością (także js/store) i czy nazwy plików się zgadzają. Potem odśwież stronę (Ctrl+F5).', 'load')"></script>
+<script type="module" src="js/main.js?v=2026-11-08-client-gate-7" onerror="window.__halFail('Nie udało się wczytać plików aplikacji.', 'Sprawdź, czy na serwerze są foldery css i js z całą zawartością (także js/store) i czy nazwy plików się zgadzają. Potem odśwież stronę (Ctrl+F5).', 'load')"></script>
 </body>
 </html>

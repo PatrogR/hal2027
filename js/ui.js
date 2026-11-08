@@ -98,6 +98,9 @@ export function readErrMsg(e) {
 // attacker cannot use the form to discover which logins exist.
 export function authMsg(e) {
   const c = e?.code || "";
+  if (c.includes("resource-exhausted")) return "Za dużo prób. Spróbuj ponownie później.";
+  if (c.includes("permission-denied")) return "Brak uprawnień do tej operacji.";
+  if (c.includes("failed-precondition")) return "Usługa nie jest jeszcze skonfigurowana.";
   if (c === "no-access") return "To konto nie ma dostępu albo zostało dezaktywowane.";
   if (c.includes("too-many-requests")) return "Za dużo prób. Spróbuj ponownie za kilka minut.";
   if (c.includes("email-already-in-use")) return "Ten login jest już zajęty.";

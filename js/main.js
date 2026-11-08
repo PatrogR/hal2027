@@ -17,12 +17,12 @@
  *   main → views / auth → plan / kanban / admin → state → ui → config
  * ---------------------------------------------------------------------------
  */
-import { configured, VIEWS } from "./config.js";
+import { configured, VIEWS } from "./config.js?v=2026-11-08-client-gate-4";
 import { $, el, openClosers } from "./ui.js";
 import { state } from "./state.js";
 import { createFirebaseStore } from "./store/firebase.js";
 import { createDemoStore } from "./store/demo.js";
-import { renderAccount } from "./auth.js";
+import { openLogin, renderAccount } from "./auth.js?v=2026-11-08-cancel-gate";
 import { openView, viewFromHash } from "./views.js";
 
 // Shows a start-up error on the page. Uses the safety net from index.html;
@@ -52,37 +52,97 @@ async function init() {
   const demo = $("#demo");
   if (demo) demo.hidden = configured;
 
-  // 2. Login state. `started` prevents opening the view twice: the demo store
-  //    calls this callback immediately, before step 4 has run.
   let started = false;
-  state.store.onAuth(m => {
-    state.me = m;
+  const gate = $("#accessGate");
+  const gateForm = $("#accessForm");
+  const gatePassword = $("#accessPassword");
+  const gateError = $("#accessError");
+  const gateHopLogin = $("#accessHopLogin");
+  const gateButton = gateForm?.querySelector('button[type="submit"]');
+
+  const startApplication = afterStart => {
+    if (started) {
+      afterStart?.();
+      return false;
+    }
+    started = true;
+    let initialAuthStateReceived = false;
+
+    // Login state. The demo store calls back immediately; Firebase calls
+    // back after restoring the browser's session.
+    state.store.onAuth(m => {
+      state.me = m;
+      renderAccount();
+      if (!started) return;
+      [...openClosers].forEach(c => c());
+      openView(VIEWS[state.view]?.hopOnly && !state.me ? "plan" : state.view);
+      if (!initialAuthStateReceived) {
+        initialAuthStateReceived = true;
+        afterStart?.();
+      }
+    });
     renderAccount();
-    if (!started) return;
-    // Close all open dialogs – they may show data or buttons that are no
-    // longer valid (e.g. the admin panel right after logout).
-    [...openClosers].forEach(c => c());
-    // Re-open the current view so HoP-only elements appear/disappear.
-    // A guest who was on the HoP board is sent back to the masterplan.
-    openView(VIEWS[state.view]?.hopOnly && !state.me ? "plan" : state.view);
+
+    $("#warnClose")?.addEventListener("click", () => { state.warnHidden = true; renderAccount(); });
+    window.addEventListener("hashchange", () => openView(viewFromHash()));
+    openView(viewFromHash());
+    return true;
+  };
+
+  const markReady = () => {
+    window.__halReady = true;
+    document.querySelectorAll('.fatal[data-kind="watchdog"]').forEach(n => n.remove());
+  };
+
+  if (!gate || !gateForm || !gatePassword || !gateError || !gateButton) {
+    fail("Nie udało się wyświetlić formularza hasła.", "Odśwież stronę. Jeśli problem się powtarza, sprawdź index.html.");
+    return;
+  }
+
+  gateForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    gateError.textContent = "";
+    gateButton.disabled = true;
+    try {
+      await state.store.unlockApp(gatePassword.value);
+      gate.hidden = true;
+      gatePassword.value = "";
+      startApplication();
+    } catch (error) {
+      const code = error?.code || "";
+      gateError.textContent = code === "app/wrong-password"
+        ? "Nieprawidłowe hasło."
+        : "Nie udało się sprawdzić hasła. Sprawdź połączenie i opublikowanie reguł Firestore.";
+    } finally {
+      gateButton.disabled = false;
+      gatePassword.focus();
+    }
   });
-  renderAccount();
 
-  // "×" on the HoP warning bar hides it for the rest of this page visit.
-  $("#warnClose")?.addEventListener("click", () => { state.warnHidden = true; renderAccount(); });
+  gateHopLogin?.addEventListener("click", e => {
+    e.preventDefault();
+    gate.hidden = true;
+    startApplication(() => openLogin({
+      onCancel: () => {
+        gate.hidden = false;
+        gatePassword.focus();
+      }
+    }));
+  });
 
-  // 3. Navigation via the URL hash.
-  window.addEventListener("hashchange", () => openView(viewFromHash()));
-
-  // 4. First view.
-  started = true;
-  openView(viewFromHash());
-
-  // 5. Start-up finished: from now on errors are handled by the app itself.
-  //    Also remove a "did not start" watchdog message if a very slow
-  //    connection made the app start after the 20-second limit.
-  window.__halReady = true;
-  document.querySelectorAll('.fatal[data-kind="watchdog"]').forEach(n => n.remove());
+  try {
+    if (await state.store.checkAppAccess()) {
+      gate.hidden = true;
+      startApplication();
+    } else {
+      gate.hidden = false;
+      gatePassword.focus();
+    }
+  } catch {
+    gate.hidden = false;
+    gateError.textContent = "Nie można połączyć się z usługą dostępu. Sprawdź połączenie lub wdrożenie Firebase.";
+  }
+  markReady();
 }
 
 init().catch(e => {

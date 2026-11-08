@@ -251,7 +251,7 @@ export function renderPlan() {
     });
     const monthHeader = el("div", { class: "months", style: `--n:${ms.length}` },
       ...ms.map((m, j) => el("div", {
-        class: "month", "data-month-index": String(h * per + j), style: "grid-column:span 2", text: m.name
+        class: "month", "data-month-index": String(h * per + j), text: m.name
       })));
     grid.append(monthHeader);
 

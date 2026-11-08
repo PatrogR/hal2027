@@ -1,18 +1,15 @@
 // ===========================================================================
-// firestore.rules – server-side security rules for the HAL 2027 board.
-//
-// These rules are the ONLY real protection of the data. Hiding buttons in
-// the web page is just convenience: anyone can call the Firestore API
-// directly with the (public) project config, so every permission and every
-// data check that matters must be here.
+// firestore.rules – rules for the HAL 2027 board.
+// The shared-password prompt is only a client-side convenience and is not
+// checked here.
 //
 // Deploy: Firebase Console → Firestore Database → Rules → paste → Publish.
 // Test:   use the "Rules Playground" on the same page before publishing.
 //
 // Access summary:
 //   patrol boards (program/kwaterka/organizacja) – anyone reads/writes before review;
-//     active HoP and admin members may approve into "done" or delete
-//   HoP board, masterplan editing                – active HoP members
+//     active HoP/admin members may approve into "done" or delete
+//   HoP board, masterplan editing                – active HoP/admin members
 //   masterplan reading                           – everyone
 //   member accounts, activity log reading        – admins only
 // ===========================================================================
@@ -144,6 +141,19 @@ service cloud.firestore {
         && request.resource.data.at == request.time;
       // Log entries are append-only: nobody can edit or delete them.
       allow update, delete: if false;
+    }
+
+    // The shared password is intentionally readable by the client and is not
+    // a security boundary. Only an active admin may replace it through the UI.
+    match /settings/{setting} {
+      allow read: if setting == 'appAccess';
+      allow create, update: if setting == 'appAccess'
+        && isAdmin()
+        && request.resource.data.keys().hasOnly(['password'])
+        && request.resource.data.password is string
+        && request.resource.data.password.size() >= 8
+        && request.resource.data.password.size() <= 128;
+      allow delete: if false;
     }
   }
 }

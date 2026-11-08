@@ -50,7 +50,7 @@ export function renderAccount() {
 
 // Login dialog. On success the store's onAuth listener (main.js) updates the
 // whole UI and closes all dialogs, including this one.
-export function openLogin() {
+export function openLogin({ onCancel } = {}) {
   // autocomplete hints let password managers fill in the fields;
   // autocapitalize/spellcheck off stops phones from changing "jan.kowalski".
   const loginIn = el("input", { id: "l-login", autocomplete: "username", required: true, autocapitalize: "none", spellcheck: "false" });
@@ -58,6 +58,7 @@ export function openLogin() {
   const err = el("p", { class: "err" });
   const btn = el("button", { class: "btn red", type: "submit", text: "Zaloguj" });
   let close;
+  let loggedIn = false;
   const form = el("form", {
     "aria-labelledby": "l-h",
     onsubmit: async e => {
@@ -67,6 +68,7 @@ export function openLogin() {
         const m = await state.store.signIn(normLogin(loginIn.value), pwdIn.value);
         // Log with the returned member: state.me may not be set yet.
         state.store.log(m, "Zalogowanie", "").catch(() => {});
+        loggedIn = true;
         close();
       } catch (ex) {
         err.textContent = authMsg(ex);
@@ -82,7 +84,7 @@ export function openLogin() {
       el("button", { class: "btn ghost", type: "button", text: "Anuluj", onclick: () => close() }),
       btn)
   );
-  close = openModal(form, { red: true });
+  close = openModal(form, { red: true, onClose: () => { if (!loggedIn && !state.me) onCancel?.(); } });
 }
 
 // Writes the logout to the activity log, then signs out. The log entry must

@@ -36,6 +36,25 @@ html, body { height: 100%; margin: 0; }
 body { background: #fff; color: var(--ink); display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
 /* Make the hidden attribute win over any display rule below. */
 [hidden] { display: none !important; }
+.access-gate {
+  position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center;
+  padding: 20px; background: var(--paper);
+}
+.access-card {
+  width: min(100%, 400px); padding: 28px; border: 3px solid var(--grey-d);
+  border-radius: 20px; background: #fff; box-shadow: 0 16px 48px rgba(0,0,0,.12);
+}
+.access-card h1 { margin: 0; color: var(--c-t); font-size: 1.55rem; font-weight: 900; }
+.access-card > p:first-of-type { margin: 8px 0 20px; color: var(--muted); }
+.access-card label { display: block; margin-bottom: 5px; font-weight: 800; }
+.access-card input { width: 100%; }
+.access-card .err { min-height: 1.3em; margin: 8px 0; }
+.access-card .btn { width: 100%; min-height: 46px; }
+.access-login-link {
+  display: block; width: fit-content; margin: 12px auto 0;
+  color: var(--red-t); font-size: .9rem; font-weight: 800; text-decoration: underline;
+}
+.access-login-link:hover { color: var(--red-d); }
 /* Visible focus ring for keyboard users only (not on mouse clicks). */
 :is(button, input, textarea, select, .card):focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 
@@ -145,9 +164,9 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .plan { flex: 1; min-height: 0; overflow: auto; padding: 0 20px 20px; }
 .plan-half { --lw: 160px; display: grid; grid-template-columns: var(--lw) 1fr; min-width: 760px; }
 .plan-half + .plan-half { margin-top: 22px; }
-.months { grid-column: 2; grid-row: 1; display: grid; grid-template-columns: repeat(var(--slots), 1fr); margin-bottom: 8px; }
+.months { grid-column: 2; grid-row: 1; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); align-items: center; margin-bottom: 8px; }
 .month {
-  display: grid; place-items: center; margin: 0 4px; padding: .4em .3em; text-align: center;
+  display: grid; place-items: center; justify-self: stretch; margin: 0 4px; padding: .4em .3em; text-align: center;
   background: var(--grey); border: 3px solid var(--grey-d); border-radius: 14px;
   color: #fff; font-weight: 900; font-size: .95rem; text-transform: uppercase; letter-spacing: .02em;
 }
@@ -165,7 +184,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .rcell[data-row="program"], .rcell[data-row="organizacja"] { background: var(--band); }
 .band[data-row="program"], .band[data-row="organizacja"] { background: var(--band); }
 .rlabel {
-  flex: 1; min-width: 0; height: 3.1rem; margin: 0 0 0 4px; white-space: nowrap; overflow: hidden;
+  flex: 1; min-width: 0; height: calc(100% - 12px); margin: 0 0 0 4px; white-space: nowrap; overflow: hidden;
   display: grid; place-items: center;
   background: var(--rc); border: 3px solid var(--rd); border-radius: 14px;
   color: #fff; font-weight: 900; font-size: .95rem; text-transform: uppercase; letter-spacing: .02em;
