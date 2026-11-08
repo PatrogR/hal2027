@@ -271,6 +271,7 @@ th, td { text-align: left; padding: .45em .6em; border-bottom: 1px solid var(--l
 th { font-weight: 900; color: var(--grey-d); }
 td.nowrap { white-space: nowrap; }
 .log { max-height: 340px; overflow: auto; }
+.log-day th { padding-top: .75em; color: var(--red-t); background: var(--paper); text-transform: capitalize; }
 .tag { display: inline-block; font-weight: 800; font-size: .78rem; padding: .1em .55em; border-radius: 8px; background: var(--band); }
 .tag.off { color: var(--red-t); background: #FBE9EA; }
 .create { display: grid; grid-template-columns: 1fr 1fr 150px auto; gap: 0 10px; align-items: end; }

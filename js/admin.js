@@ -111,6 +111,16 @@ export function openAdmin() {
     const d = v?.toDate ? v.toDate() : v ? new Date(v) : null;
     return d ? d.toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" }) : "teraz";
   };
+  const dateKey = v => {
+    const d = v?.toDate ? v.toDate() : v ? new Date(v) : new Date();
+    return Number.isNaN(d.getTime()) ? "unknown" : `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  };
+  const dateHeading = v => {
+    const d = v?.toDate ? v.toDate() : v ? new Date(v) : new Date();
+    return Number.isNaN(d.getTime())
+      ? "Nieznana data"
+      : d.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  };
   const displayDetails = value => String(value || "").replace(/\bHoP(?=:|\))/g, "Patrolowa");
 
   // Accounts table. The admin's own row has no button: rules forbid an admin
@@ -135,12 +145,29 @@ export function openAdmin() {
 
   // Activity log table (newest first).
   const renderLogs = list => {
-    logBody.replaceChildren(...(list.length ? list.map(l => el("tr", {},
-      el("td", { class: "nowrap", text: fmt(l.at) }),
-      el("td", { text: l.login }),
-      el("td", { text: l.action }),
-      el("td", { text: displayDetails(l.details) })
-    )) : [el("tr", {}, el("td", { colspan: "4", class: "hint", text: "Brak wpisów." }))]));
+    if (!list.length) {
+      logBody.replaceChildren(el("tr", {}, el("td", { colspan: "4", class: "hint", text: "Brak wpisów." })));
+      return;
+    }
+
+    const rows = [];
+    let currentDay = null;
+    for (const entry of list) {
+      const key = dateKey(entry.at);
+      if (key !== currentDay) {
+        rows.push(el("tr", { class: "log-day" },
+          el("th", { colspan: "4", scope: "rowgroup", text: dateHeading(entry.at) })
+        ));
+        currentDay = key;
+      }
+      rows.push(el("tr", {},
+        el("td", { class: "nowrap", text: fmt(entry.at) }),
+        el("td", { text: entry.login }),
+        el("td", { text: entry.action }),
+        el("td", { text: displayDetails(entry.details) })
+      ));
+    }
+    logBody.replaceChildren(...rows);
   };
 
   // "Create account" form. The start password is shown in plain text
