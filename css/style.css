@@ -39,13 +39,6 @@ body { background: #fff; color: var(--ink); display: flex; flex-direction: colum
 /* Visible focus ring for keyboard users only (not on mouse clicks). */
 :is(button, input, textarea, select, .card):focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 
-/* HoP mode: red frame around the whole page while logged in (class set in auth.js).
-   pointer-events: none so the frame never blocks clicks. */
-body.authed::after {
-  content: ""; position: fixed; inset: 0; z-index: 100; pointer-events: none;
-  border: 5px solid var(--red);
-}
-
 /* ---------- Top bar: title, tabs, square account buttons ---------- */
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 8px; padding: 16px 20px 12px; }
 .brand { margin-right: auto; padding-right: 12px; }
@@ -78,6 +71,12 @@ body.authed::after {
 .sq svg { width: 1.35rem; height: 1.35rem; }
 .sq.login { color: var(--grey-d); border: 2px solid var(--line); background: transparent; }
 .sq.login:hover { background: var(--band); border-color: var(--grey); }
+.hop-status {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  min-width: 44px; height: 44px; padding: 0 10px;
+  border: 3px solid var(--red); border-radius: 14px;
+  background: #FBE9EA; color: var(--red-t); font-weight: 900; font-size: .82rem;
+}
 
 /* Info bars: demo-mode notice and the HoP "no sensitive data" warning. */
 .demo, .warn { display: flex; align-items: flex-start; gap: 8px; margin: 0 20px 10px; padding: 8px 12px; font-size: .86rem; font-weight: 700; }

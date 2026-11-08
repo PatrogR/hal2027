@@ -49,6 +49,8 @@ działa tryb podglądu (konta testowe: admin / demo, hop / demo).
 - Dialogi mieszczą się w wysokości ekranu, a formularze i ich przyciski
   pozostają wygodne przy obsłudze dotykowej.
 - Przycisk logowania ma stonowaną ikonę wejścia zamiast kłódki.
+- Po zalogowaniu HoP jest widoczna czerwona plakietka statusu zamiast ramki
+  wokół całej strony; administratora oznacza ikona panelu.
 
 ## Wdrożenie
 

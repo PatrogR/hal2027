@@ -18,14 +18,12 @@ import { openAdmin } from "./admin.js";
 
 /**
  * Redraws everything that depends on being logged in:
- *  - the square buttons in #account,
- *  - the red frame around the page (class "authed" on <body>, see CSS),
+ *  - the status badge and square buttons in #account,
  *  - the "no sensitive data" warning bar (#warn), shown only to HoP.
  * Called by main.js on start and after every login/logout.
  */
 export function renderAccount() {
   const box = $("#account");
-  document.body.classList.toggle("authed", !!state.me);
   // The warning can be dismissed with "×", but only until the page reloads,
   // so every new session shows it again.
   const warn = $("#warn");
@@ -35,6 +33,14 @@ export function renderAccount() {
   if (!state.me) {
     box.append(iconButton("login", "Zaloguj (HoP)", openLogin));
     return;
+  }
+  if (state.me.role === "hop") {
+    box.append(el("span", {
+      class: "hop-status",
+      text: "HoP",
+      title: `Zalogowano jako ${state.me.login}`,
+      "aria-label": `Zalogowano jako HoP, ${state.me.login}`
+    }));
   }
   box.append(iconButton("logout", `Wyloguj (${state.me.login})`, confirmLogout));
   if (state.me.role === "admin") box.append(iconButton("console", "Panel admina", openAdmin));
