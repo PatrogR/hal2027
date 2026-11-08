@@ -36,7 +36,7 @@ export function createDemoStore() {
     ["Zatwierdzanie wypoczynku", "organizacja", 12, 13],
     ["Organizacja transportu", "organizacja", 14, 15],
     ["Weryfikacja EKUZ i DO", "organizacja", 14, 15],
-    ["Harcerska Akcja Letnia 2027", "all", 16, 19]
+    ["Obóz 7 ŁDW 2027", "all", 16, 19]
   ].map(([title, row, from, to], i) => ({ id: "seed" + i, title, row, from, to }));
 
   // Initial demo database.
