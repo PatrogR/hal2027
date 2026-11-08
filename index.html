@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harcerska Akcja Letnia 2027 – tablica zadań</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<!-- All styling lives in css/style.css -->
+<link rel="stylesheet" href="css/style.css?v=2026-11-08">
+</head>
+<!--
+  index.html – page skeleton only.
+  Almost everything is drawn by JavaScript (js/main.js and the modules it
+  imports). Elements with an id are "slots" that the scripts fill in:
+    #tabs, #account   – tab buttons and square login/logout/admin buttons
+    #demo, #warn      – demo-mode banner and HoP sensitive-data warning
+    #viewName, #barActions – current view title and its action buttons
+    #plan, #board     – masterplan and kanban containers (one is hidden)
+  data-board on <body> selects the colour scheme (see css/style.css).
+-->
+<body data-board="plan">
+
+<header class="top">
+  <h1 class="brand">Harcerska Akcja Letnia 2027<small>Masterplan i zadania patroli</small></h1>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Wybór widoku"></nav>
+  <div class="account" id="account"></div>
+</header>
+
+<p class="demo" id="demo" hidden><span class="long">Tryb podglądu: dane zapisują się tylko w tej przeglądarce. Konta testowe: admin / demo (administrator) oraz hop / demo.</span><span class="short">Tryb podglądu (dane lokalne). Konta: admin / demo, hop / demo.</span></p>
+<p class="warn" id="warn" hidden><span class="long">Pamiętaj: w tym systemie nie wolno wpisywać danych wrażliwych ani danych osobowych uczestników, np. numerów PESEL, informacji o zdrowiu, adresów, numerów telefonów czy danych z kart kwalifikacyjnych.</span><span class="short">Nie wpisuj tu danych wrażliwych ani danych osobowych uczestników.</span><button class="x" id="warnClose" type="button" aria-label="Ukryj przypomnienie" title="Ukryj przypomnienie">×</button></p>
+
+<div class="bar">
+  <h2 id="viewName"></h2>
+  <div id="barActions"></div>
+</div>
+
+<main id="main">
+  <!-- Shown only when JavaScript is disabled, e.g. when SharePoint embeds the
+       page in a sandboxed iframe without "allow-scripts". -->
+  <noscript><p class="fatal"><strong>Ta strona wymaga JavaScriptu.</strong> Jeśli widzisz ten komunikat w SharePoincie, otwórz stronę bezpośrednio pod jej adresem albo poproś administratora witryny o zezwolenie na skrypty w osadzonej ramce.</p></noscript>
+  <div class="plan" id="plan"><p class="plan-empty">Ładowanie…</p></div>
+  <div class="board" id="board" hidden></div>
+</main>
+
+<!--
+  Start-up safety net. A CLASSIC (non-module) script, so it runs even when the
+  ES modules cannot load at all. Without it, any start-up failure leaves a
+  blank page with only the title. It shows a readable message instead when:
+    - the page is opened straight from disk (file://), where browsers block modules,
+    - a JS file is missing on the server (404) – <script onerror> below,
+    - a JS file has a syntax error (e.g. a typo in js/config.js),
+    - anything throws before the app has finished starting,
+    - the app has not started after 20 seconds (watchdog).
+  Written in old-style JavaScript on purpose, so it works in every browser.
+  main.js sets window.__halReady = true once the first view is shown;
+  errors after that point are left to the app itself.
+-->
+<script>
+(function () {
+  function show(title, detail, kind) {
+    var main = document.getElementById("main");
+    // Show only the first problem: later errors are usually its consequences.
+    if (!main || document.querySelector(".fatal")) return;
+    var box = document.createElement("div");
+    box.className = "fatal";
+    box.setAttribute("data-kind", kind || "error");
+    var t = document.createElement("strong");
+    t.textContent = title;
+    box.appendChild(t);
+    if (detail) {
+      var d = document.createElement("p");
+      d.textContent = detail;
+      box.appendChild(d);
+    }
+    main.insertBefore(box, main.firstChild);
+    var plan = document.getElementById("plan");
+    if (plan) plan.hidden = true;
+  }
+  window.__halFail = show;
+
+  if (location.protocol === "file:") {
+    show("Strona została otwarta bezpośrednio z dysku.",
+      "Przeglądarki blokują wtedy skrypty aplikacji. W folderze projektu uruchom: python -m http.server 8000 i otwórz http://localhost:8000 (albo użyj rozszerzenia Live Server w VS Code).", "file");
+    return;
+  }
+
+  window.addEventListener("error", function (e) {
+    if (window.__halReady) return;
+    var where = e.filename ? " (" + e.filename.split("/").slice(-2).join("/") + ", linia " + e.lineno + ")" : "";
+    show("Błąd podczas uruchamiania aplikacji.", (e.message || "Nieznany błąd") + where +
+      ". Jeśli właśnie zmieniałeś pliki, sprawdź je pod kątem literówek (szczególnie js/config.js) i odśwież stronę (Ctrl+F5).", "error");
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    if (window.__halReady) return;
+    var r = e.reason;
+    show("Błąd podczas uruchamiania aplikacji.", (r && r.message) ? r.message : String(r), "error");
+  });
+
+  setTimeout(function () {
+    if (!window.__halReady) {
+      show("Aplikacja nie uruchomiła się.",
+        "Sprawdź połączenie z internetem i odśwież stronę (Ctrl+F5). Jeśli problem wraca, otwórz konsolę przeglądarki (F12) i sprawdź komunikaty błędów.", "watchdog");
+    }
+  }, 20000);
+})();
+</script>
+
+<!--
+  ES module entry point. onerror fires when js/main.js or ANY file it
+  imports cannot be downloaded (e.g. a folder was not uploaded).
+  The ?v= suffix forces browsers to fetch the new file after an update;
+  change it whenever you deploy a new version.
+-->
+<script type="module" src="js/main.js?v=2026-11-08" onerror="window.__halFail('Nie udało się wczytać plików aplikacji.', 'Sprawdź, czy na serwerze są foldery css i js z całą zawartością (także js/store) i czy nazwy plików się zgadzają. Potem odśwież stronę (Ctrl+F5).', 'load')"></script>
+</body>
+</html>

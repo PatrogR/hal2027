@@ -1,0 +1,132 @@
+// ===========================================================================
+// firestore.rules – server-side security rules for the HAL 2027 board.
+//
+// These rules are the ONLY real protection of the data. Hiding buttons in
+// the web page is just convenience: anyone can call the Firestore API
+// directly with the (public) project config, so every permission and every
+// data check that matters must be here.
+//
+// Deploy: Firebase Console → Firestore Database → Rules → paste → Publish.
+// Test:   use the "Rules Playground" on the same page before publishing.
+//
+// Access summary:
+//   patrol boards (program/kwaterka/organizacja) – anyone with the link
+//   HoP board, masterplan editing                – active HoP members
+//   masterplan reading                           – everyone
+//   member accounts, activity log reading        – admins only
+// ===========================================================================
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Who is who ----------
+
+    // Path of the signed-in user's member document: members/{their uid}.
+    function memberPath() {
+      return /databases/$(database)/documents/members/$(request.auth.uid);
+    }
+
+    // Signed in AND has a member document AND it is active.
+    // A Firebase Auth account alone grants nothing (anyone can create one
+    // via the API because sign-up must stay enabled for the admin panel).
+    // Checked on every request, so deactivation works immediately.
+    function isMember() {
+      return request.auth != null
+        && exists(memberPath())
+        && get(memberPath()).data.active == true;
+    }
+
+    // Active member with role "admin".
+    function isAdmin() {
+      return isMember() && get(memberPath()).data.role == 'admin';
+    }
+
+    // The three public patrol boards. Must match the view ids in js/config.js.
+    function isPatrolBoard(board) {
+      return board in ['program', 'kwaterka', 'organizacja'];
+    }
+
+    // ---------- Data validation ----------
+    // request.resource.data = the document as it WOULD look after the write
+    // (for partial updates: existing fields merged with the new ones).
+    // hasOnly() rejects any unexpected field; size limits stop huge writes.
+
+    // Kanban task. Limits match the form fields in js/kanban.js.
+    // deadline is optional: absent, "" or a "YYYY-MM-DD" string.
+    function validTask() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['title', 'description', 'owner', 'deadline', 'column', 'order', 'createdAt', 'updatedAt'])
+        && (!('deadline' in d) || (d.deadline is string
+            && (d.deadline == '' || d.deadline.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'))))
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 200
+        && d.description is string && d.description.size() <= 5000
+        && d.owner is string && d.owner.size() <= 100
+        && d.column in ['todo', 'doing', 'review', 'done']   // = COLUMNS in config.js
+        && d.order is number;
+    }
+
+    // Masterplan event. from/to are half-month slot numbers (integers);
+    // 48 slots = 24 months, more than CONFIG.plan uses.
+    function validEvent() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['title', 'row', 'from', 'to'])
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 120
+        && d.row in ['program', 'kwaterka', 'organizacja', 'all']   // = ROWS + ROW_ALL
+        && d.from is int && d.to is int
+        && d.from >= 0 && d.to >= d.from && d.to < 48;
+    }
+
+    // Member account document. Login format = LOGIN_RE in config.js.
+    function validMember() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['login', 'role', 'active', 'createdAt'])
+        && d.login is string && d.login.matches('^[a-z0-9._-]{3,40}$')
+        && d.role in ['hop', 'admin']
+        && d.active is bool;
+    }
+
+    // ---------- Kanban boards: patrols open to all, HoP board members only ----------
+    // Path: boards/{board}/tasks/{task}. Any other board name is rejected.
+    match /boards/{board}/tasks/{task} {
+      allow read, delete: if isPatrolBoard(board) || (board == 'hop' && isMember());
+      allow create, update: if (isPatrolBoard(board) || (board == 'hop' && isMember())) && validTask();
+    }
+
+    // ---------- Masterplan: everyone reads, HoP members edit ----------
+    match /plan/{eventId} {
+      allow read: if true;
+      allow create, update: if isMember() && validEvent();
+      allow delete: if isMember();
+    }
+
+    // ---------- Member accounts: managed by admins ----------
+    match /members/{uid} {
+      // Each user may read their own document (needed at login to check
+      // role/active); admins may read all.
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow create: if isAdmin() && validMember();
+      // Admins may not modify their OWN document (no accidental self-
+      // deactivation or self-demotion) and may never change a login.
+      allow update: if isAdmin() && uid != request.auth.uid && validMember()
+        && request.resource.data.login == resource.data.login;
+      // Accounts are deactivated, never deleted, so the log stays meaningful.
+      allow delete: if false;
+    }
+
+    // ---------- Activity log: written by members, read by admins ----------
+    match /logs/{logId} {
+      allow read: if isAdmin();
+      // A member can only log as THEMSELVES (uid and login must match their
+      // member document) and the timestamp must be the server's time.
+      allow create: if isMember()
+        && request.resource.data.keys().hasOnly(['uid', 'login', 'action', 'details', 'at'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.login == get(memberPath()).data.login
+        && request.resource.data.action is string && request.resource.data.action.size() <= 60
+        && request.resource.data.details is string && request.resource.data.details.size() <= 300
+        && request.resource.data.at == request.time;
+      // Log entries are append-only: nobody can edit or delete them.
+      allow update, delete: if false;
+    }
+  }
+}
