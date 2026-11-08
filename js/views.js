@@ -35,7 +35,7 @@ export const viewFromHash = () => {
 
 // (Re)draws the tab buttons. HoP-only tabs are skipped for guests – hiding
 // them is just UI; the actual protection is in firestore.rules.
-// Clicking a tab only changes the hash; the "hashchange" listener does the rest.
+// Clicking a tab updates the hash; the "hashchange" listener opens its view.
 export function renderTabs() {
   const nav = $("#tabs");
   if (!nav) return;
@@ -44,17 +44,35 @@ export function renderTabs() {
     if (v.hopOnly && !state.me) continue;
     nav.append(el("button", {
       class: "tab", type: "button", role: "tab", "data-board": id, "aria-selected": String(id === state.view),
-      text: v.tab, onclick: () => { if (state.view !== id) location.hash = id; }
+      text: v.tab, onclick: () => {
+        closeMobileMenu();
+        if (state.view !== id) location.hash = id;
+      }
     }));
   }
-  // On phones the tabs are one sideways-scrolling row: make sure the active
-  // tab is visible. We set scrollLeft directly instead of scrollIntoView(),
-  // which could also scroll the SharePoint page around the iframe.
+  // If the tab strip itself overflows, keep the active item visible without
+  // scrolling the containing SharePoint page.
   const active = nav.querySelector('[aria-selected="true"]');
   if (active && nav.scrollWidth > nav.clientWidth) {
     nav.scrollLeft = Math.max(0, active.offsetLeft - nav.offsetLeft - 12);
   }
 }
+
+function closeMobileMenu() {
+  document.body.classList.remove("menu-open");
+  const toggle = $("#menuToggle");
+  toggle?.setAttribute("aria-expanded", "false");
+  toggle?.setAttribute("aria-label", "Otwórz menu");
+}
+
+$("#menuToggle")?.addEventListener("click", () => {
+  const isOpen = document.body.classList.toggle("menu-open");
+  $("#menuToggle")?.setAttribute("aria-expanded", String(isOpen));
+  $("#menuToggle")?.setAttribute("aria-label", isOpen ? "Zamknij menu" : "Otwórz menu");
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeMobileMenu();
+});
 
 /* ---------- Switching views ---------- */
 
@@ -66,6 +84,7 @@ export function renderTabs() {
 export function openView(v) {
   if (VIEWS[v]?.hopOnly && !state.me) v = "plan";   // guests never see HoP views
   state.view = v;
+  closeMobileMenu();
 
   // <body data-board="…"> switches the colour variables in style.css.
   document.body.dataset.board = v;
@@ -84,8 +103,11 @@ export function openView(v) {
   // Show either the masterplan container or the kanban container.
   const isPlan = v === "plan";
   const planBox = $("#plan"), boardBox = $("#board");
+  const planControls = $("#planControls"), boardControls = $("#boardControls");
   if (planBox) planBox.hidden = !isPlan;
   if (boardBox) boardBox.hidden = isPlan;
+  if (planControls) planControls.hidden = !isPlan;
+  if (boardControls) boardControls.hidden = isPlan;
   renderBarActions();
 
   if (isPlan) {

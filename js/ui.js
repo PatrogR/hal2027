@@ -183,7 +183,7 @@ export function deleteButton(onConfirm) {
 // stroke="currentColor", so their colour comes from the CSS `color` property.
 // These are fixed strings written by us, so innerHTML is safe here.
 export const ICONS = {
-  login: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="11" width="15" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  login: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8l4 4-4 4"/><path d="M18 12H8"/><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6"/></svg>',
   logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M15 8l4 4-4 4"/><path d="M19 12H9"/></svg>',
   console: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 10l3 2.5L7 15"/><path d="M12.5 15H17"/></svg>'
 };
@@ -192,7 +192,7 @@ export const ICONS = {
 // icon, so `label` is used both as aria-label (screen readers) and as the
 // title tooltip shown on hover.
 export function iconButton(icon, label, onclick) {
-  const b = el("button", { class: "sq", type: "button", "aria-label": label, title: label, onclick });
+  const b = el("button", { class: `sq ${icon}`, type: "button", "aria-label": label, title: label, onclick });
   b.innerHTML = ICONS[icon];
   return b;
 }

@@ -53,6 +53,7 @@ body.authed::after {
 .brand small { display: block; font-size: .8rem; font-weight: 700; color: var(--muted); margin-top: 2px; }
 
 .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.menu-toggle { display: none; }
 .tab {
   --tc: #999; --tcd: #777;
   font: inherit; font-weight: 900; font-size: .92rem; text-transform: uppercase; letter-spacing: .02em;
@@ -75,6 +76,8 @@ body.authed::after {
 }
 .sq:hover { background: #fff; }
 .sq svg { width: 1.35rem; height: 1.35rem; }
+.sq.login { color: var(--grey-d); border: 2px solid var(--line); background: transparent; }
+.sq.login:hover { background: var(--band); border-color: var(--grey); }
 
 /* Info bars: demo-mode notice and the HoP "no sensitive data" warning. */
 .demo, .warn { display: flex; align-items: flex-start; gap: 8px; margin: 0 20px 10px; padding: 8px 12px; font-size: .86rem; font-weight: 700; }
@@ -113,6 +116,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .card.soon { background: #FFF4E5; }
 .card.overdue { background: #FCE8E9; }
 .card h3 { margin: 0; font-size: 1rem; font-weight: 800; line-height: 1.3; color: var(--c-t); overflow-wrap: anywhere; }
+.card-title { width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
 .card p {
   margin: .35em 0 0; font-size: .86rem; line-height: 1.4; color: #555; white-space: pre-line; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
@@ -139,9 +143,9 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .plan { flex: 1; min-height: 0; overflow: auto; padding: 0 20px 20px; }
 .plan-half { --lw: 160px; display: grid; grid-template-columns: var(--lw) 1fr; min-width: 760px; }
 .plan-half + .plan-half { margin-top: 22px; }
-.months { grid-column: 2; grid-row: 1; display: grid; grid-template-columns: repeat(var(--n), 1fr); margin-bottom: 8px; }
+.months { grid-column: 2; grid-row: 1; display: grid; grid-template-columns: repeat(var(--slots), 1fr); margin-bottom: 8px; }
 .month {
-  margin: 0 4px; padding: .5em .3em; text-align: center;
+  display: grid; place-items: center; margin: 0 4px; padding: .4em .3em; text-align: center;
   background: var(--grey); border: 3px solid var(--grey-d); border-radius: 14px;
   color: #fff; font-weight: 900; font-size: .95rem; text-transform: uppercase; letter-spacing: .02em;
 }
@@ -164,7 +168,16 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   background: var(--rc); border: 3px solid var(--rd); border-radius: 14px;
   color: #fff; font-weight: 900; font-size: .95rem; text-transform: uppercase; letter-spacing: .02em;
 }
-.track { grid-column: 2; position: relative; }
+.rlabel-mobile { display: none; }
+.track {
+  grid-column: 2; position: relative;
+  background-image:
+    repeating-linear-gradient(to right, transparent 0, transparent calc(100% - 2px), rgba(90,90,90,.5) calc(100% - 2px), rgba(90,90,90,.5) 100%),
+    repeating-linear-gradient(to right, rgba(0,0,0,.025) 0 50%, transparent 50% 100%),
+    repeating-linear-gradient(to right, transparent 0, transparent calc(100% - 1px), rgba(90,90,90,.2) calc(100% - 1px), rgba(90,90,90,.2) 100%);
+  background-size: var(--month-width) 100%, var(--month-width) 100%, var(--slot-width) 100%;
+  background-repeat: repeat-x;
+}
 .plan-layer { grid-column: 2; position: relative; z-index: 2; pointer-events: none; }
 .ev {
   position: absolute; display: flex; align-items: center; justify-content: center;
@@ -189,6 +202,7 @@ button.ev:hover { background: #fff; }
   background: #fff; color: var(--red-t); font-weight: 900; font-size: .7rem; text-transform: uppercase;
 }
 .plan-empty { margin: 4px 0 14px; color: var(--muted); font-weight: 600; font-size: .9rem; }
+.plan-controls, .board-controls { display: none; }
 
 /* ---------- Forms and buttons ---------- */
 label { display: block; font-weight: 800; font-size: .86rem; margin: 12px 0 4px; }
@@ -214,7 +228,7 @@ textarea { min-height: 120px; resize: vertical; line-height: 1.45; }
 
 /* ---------- Dialogs (ui.js openModal) ---------- */
 .overlay { position: fixed; inset: 0; z-index: 50; padding: 16px; display: grid; place-items: center; background: rgba(59, 59, 59, .45); }
-.modal { width: min(520px, 100%); max-height: 100%; overflow: auto; background: #fff; border: 3px solid var(--c); border-radius: 16px; padding: 20px; }
+.modal { width: min(520px, 100%); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain; background: #fff; border: 3px solid var(--c); border-radius: 16px; padding: 20px; }
 .modal.wide { width: min(920px, 100%); }
 /* HoP dialogs always use red, whatever board is open. */
 .modal.red { --c: #D6303C; --c-d: #A8212B; --c-t: #AE2330; }
@@ -238,7 +252,7 @@ td.nowrap { white-space: nowrap; }
 .role-inline { display: none; }
 
 /* ---------- Toast message and fatal error ---------- */
-.toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 60; max-width: calc(100% - 32px); padding: .65em 1.1em; border-radius: 12px; background: var(--ink); color: #fff; font-weight: 700; font-size: .9rem; }
+.toast { position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 60; max-width: calc(100% - 32px); padding: .65em 1.1em; border-radius: 12px; background: var(--ink); color: #fff; font-weight: 700; font-size: .9rem; }
 .fatal { margin: 24px 20px; padding: 16px; border: 3px solid var(--red); border-radius: 14px; font-weight: 700; }
 .fatal strong { display: block; color: var(--red-t); }
 .fatal p { margin: .5em 0 0; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
@@ -246,47 +260,84 @@ td.nowrap { white-space: nowrap; }
 /* ---------- Phones / narrow iframes (≤ 720 px) ----------
    - The whole page scrolls normally (instead of fixed-height panes), so the
      header scrolls away and the content gets the full screen.
-   - Compact header: smaller title, tabs in ONE row that swipes sideways.
+   - Compact header: smaller title and a hamburger menu for view navigation.
    - Kanban columns are 85 % wide and snap into place when swiping.
    - Masterplan scrolls sideways with pinned patrol labels (.rcell).
    - Forms stack vertically; the admin log becomes a list of entries. */
 @media (max-width: 720px) {
-  html, body { height: auto; }
+  html, body { height: 100%; }
   body { min-height: 100%; }
-  main { flex: none; }
+  main { flex: 1; min-height: 0; }
 
-  .top { padding: 10px 12px 8px; gap: 8px; }
-  .brand { width: 100%; padding-right: 0; font-size: 1.05rem; }
+  .top { position: relative; z-index: 10; padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left)); gap: 8px; }
+  .brand { width: auto; flex: 1; padding-right: 0; font-size: 1.05rem; }
   .brand small { display: none; }
-  .tabs {
-    flex: 1 1 0; min-width: 0; flex-wrap: nowrap; gap: 6px;
-    overflow-x: auto; scrollbar-width: none; scroll-padding: 0 12px;
+  .menu-toggle {
+    flex: none; display: grid; place-items: center; width: 44px; height: 44px; padding: 0;
+    border: 2px solid var(--line); border-radius: 12px; background: var(--paper); color: var(--ink); cursor: pointer;
   }
-  .tabs::-webkit-scrollbar { display: none; }
-  .tab { flex: none; font-size: .82rem; padding: .45em .8em; }
+  .menu-toggle span { width: 20px; height: 2px; background: currentColor; box-shadow: 0 -6px currentColor, 0 6px currentColor; }
+  .menu-toggle[aria-expanded="true"] span { background: transparent; box-shadow: none; }
+  .menu-toggle[aria-expanded="true"] span::before, .menu-toggle[aria-expanded="true"] span::after {
+    content: ""; display: block; width: 20px; height: 2px; background: currentColor;
+  }
+  .menu-toggle[aria-expanded="true"] span::before { transform: translateY(1px) rotate(45deg); }
+  .menu-toggle[aria-expanded="true"] span::after { transform: translateY(-1px) rotate(-45deg); }
+  .tabs {
+    display: none; position: absolute; top: 100%; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right));
+    min-width: 0; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 14px;
+    background: #fff; box-shadow: 0 12px 28px rgba(0,0,0,.18);
+  }
+  body.menu-open .tabs { display: flex; }
+  .tab { width: 100%; flex: none; font-size: .86rem; padding: .55em .8em; text-align: left; }
   .account { flex: none; gap: 6px; }
 
-  .bar { padding: 0 12px 8px; }
-  .demo, .warn { margin: 0 12px 8px; padding: 6px 10px; font-size: .8rem; }
+  .bar { padding: 0 max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left)); }
+  .demo, .warn { margin: 0 max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left)); padding: 6px 10px; font-size: .8rem; }
   .long { display: none; }
   .short { display: inline; }
 
-  .board {
-    flex: none; grid-template-columns: repeat(4, 85%);
-    scroll-snap-type: x mandatory; padding: 0 12px 12px;
+  body[data-board="program"], body[data-board="kwaterka"], body[data-board="organizacja"], body[data-board="hop"] {
+    height: 100vh; height: 100dvh; min-height: 0; overflow: hidden;
   }
-  .col { scroll-snap-align: start; min-height: 55vh; }
-  .list { flex: none; overflow-y: visible; }
+  .board {
+    flex: 1; min-height: 0; grid-template-columns: repeat(4, 85%);
+    overflow-y: hidden; scroll-snap-type: x mandatory; padding: 0 12px max(12px, env(safe-area-inset-bottom));
+  }
+  .col { scroll-snap-align: start; min-height: 0; }
+  .list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; }
+  .board-controls {
+    display: flex; align-items: center; justify-content: center; gap: 14px; margin: 0 12px 6px;
+  }
+  .board-position, .timeline-position { min-width: 10ch; text-align: center; font-weight: 800; color: var(--c-t); }
+  .card { cursor: default; }
+  .card-title { min-height: 44px; text-align: left; }
 
-  .plan { flex: none; overflow-x: auto; overflow-y: visible; padding: 0 12px 16px; }
-  .plan-half { --lw: 116px; min-width: 880px; }
-  .ev { font-size: .78rem; }
+  .plan-controls {
+    display: flex; position: sticky; top: 0; z-index: 8; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 14px;
+    margin: 0 12px 8px; padding: 6px 8px; border-radius: 12px; background: rgba(255,255,255,.96);
+  }
+  .timeline-hint { flex-basis: 100%; color: var(--muted); font-size: .75rem; text-align: center; }
+  .plan { flex: none; overflow-x: auto; overflow-y: visible; padding: 0 max(12px, env(safe-area-inset-right)) 16px max(12px, env(safe-area-inset-left)); scroll-snap-type: x proximity; }
+  .plan-half { --lw: 56px; min-width: 820px; }
+  .plan-half + .plan-half { scroll-snap-align: start; }
+  .month { margin: 0 2px; padding: .35em .1em; font-size: .8rem; }
+  .ev { min-height: 44px; padding: 0 .4em; font-size: .78rem; border-width: 2px; }
+  .ev-all { font-size: 1rem; }
+  .today { border-left-width: 4px; }
+  .today span { top: 0; left: 3px; padding: .1em .45em; border: 1px solid var(--red); font-size: .78rem; box-shadow: 0 1px 5px rgba(0,0,0,.2); }
   .rcell { padding-right: 6px; }
-  .rlabel { font-size: .66rem; letter-spacing: 0; height: 2.8rem; padding: 0 .25em; border-radius: 12px; }
-  .month { font-size: .8rem; }
+  .rlabel {
+    width: 100%; height: calc(100% - 12px); padding: .35em .1em; border-radius: 12px;
+    writing-mode: vertical-rl; text-orientation: mixed; font-size: .66rem; letter-spacing: 0;
+  }
+  .rlabel-full { display: none; }
+  .rlabel-mobile { display: inline; }
 
-  .overlay { padding: 8px; }
-  .modal { padding: 16px; }
+  .overlay { overflow-y: auto; place-items: center; padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
+  .modal { max-height: calc(100vh - 16px); max-height: calc(100dvh - max(16px, env(safe-area-inset-top) + env(safe-area-inset-bottom))); padding: 16px; }
+  .modal .actions { position: sticky; bottom: -16px; z-index: 1; padding: 10px 0 0; background: #fff; }
+  .modal .actions .btn { min-height: 44px; }
   .create, .create.pwd, .row2 { grid-template-columns: 1fr; }
   .create .btn { margin-top: 10px; }
 
@@ -307,7 +358,11 @@ td.nowrap { white-space: nowrap; }
 @media (pointer: coarse) {
   .tab, .sq, .btn, .add { min-height: 44px; }
   .sq { width: 44px; height: 44px; }
-  .btn.small { min-height: 40px; }
+  .btn.small { min-height: 44px; }
   .x { width: 2.4rem; height: 2.4rem; }
   input, textarea, select { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

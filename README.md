@@ -36,6 +36,20 @@ python -m http.server 8000
 i otwórz `http://localhost:8000`. Dopóki `apiKey` w `js/config.js` zaczyna się od `WKLEJ`,
 działa tryb podglądu (konta testowe: admin / demo, hop / demo).
 
+## Obsługa na telefonie
+
+- Nawigacja widoków jest dostępna z menu hamburgerowego.
+- Masterplan pozostaje osią czasu: nagłówki pokazują nazwy miesięcy bez roku
+  i bez opisów połówek, których granice nadal są widoczne na osi. Kontrolki
+  pozwalają przechodzić między miesiącami bez poziomego przesuwania.
+- Na telefonie etykiety patroli są obrócone, a kanban wypełnia dostępną
+  wysokość ekranu; listy kart przewijają się wewnątrz kolumn.
+- W kanbanie można zmieniać kolumny przez przesuwanie tablicy, przyciski
+  poprzednia/następna albo zmianę kolumny w formularzu zadania.
+- Dialogi mieszczą się w wysokości ekranu, a formularze i ich przyciski
+  pozostają wygodne przy obsłudze dotykowej.
+- Przycisk logowania ma stonowaną ikonę wejścia zamiast kłódki.
+
 ## Wdrożenie
 
 ### A. Firebase

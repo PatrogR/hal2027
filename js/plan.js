@@ -99,6 +99,85 @@ export function todayPosition() {
 // Scroll the timeline to "today" only on the FIRST render of a page visit,
 // not on every live update (that would yank the view away while reading).
 let scrolledToToday = false;
+let activeTimelineMonth = Math.max(0, Math.floor(todayPosition() ?? 0));
+let timelineScrollFrame = 0;
+let timelineNavigationTimer = 0;
+
+function updateTimelineControls() {
+  const controls = $("#planControls");
+  if (!controls) return;
+  const month = MONTHS[activeTimelineMonth];
+  if (!controls.querySelector(".timeline-position")) {
+    controls.replaceChildren(
+      el("button", { class: "btn ghost small", type: "button", text: "‹", "aria-label": "Poprzedni miesiąc", onclick: () => scrollToTimelineMonth(activeTimelineMonth - 1) }),
+      el("span", { class: "timeline-position", "aria-live": "polite" }),
+      el("button", { class: "btn ghost small", type: "button", text: "›", "aria-label": "Następny miesiąc", onclick: () => scrollToTimelineMonth(activeTimelineMonth + 1) }),
+      el("span", { class: "timeline-hint", text: "Przesuń oś w bok, aby zobaczyć kolejne miesiące." })
+    );
+  }
+  controls.querySelector(".timeline-position").textContent = month ? month.name : "";
+  const [previous, next] = controls.querySelectorAll("button");
+  previous.disabled = activeTimelineMonth === 0;
+  next.disabled = activeTimelineMonth === MONTHS.length - 1;
+}
+
+function scrollToTimelineMonth(index) {
+  activeTimelineMonth = Math.max(0, Math.min(MONTHS.length - 1, index));
+  updateTimelineControls();
+  clearTimeout(timelineNavigationTimer);
+  timelineNavigationTimer = setTimeout(() => { timelineNavigationTimer = 0; }, 700);
+  requestAnimationFrame(() => {
+    const root = $("#plan");
+    const month = root?.querySelector(`[data-month-index="${activeTimelineMonth}"]`);
+    if (!root || !month) return;
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const behavior = reducedMotion ? "auto" : "smooth";
+    const blockRect = month.closest(".plan-half")?.getBoundingClientRect();
+    if (blockRect) {
+      const verticalDelta = blockRect.top < 0 ? blockRect.top : blockRect.bottom > window.innerHeight ? blockRect.bottom - window.innerHeight : 0;
+      if (verticalDelta) window.scrollBy({ top: verticalDelta, behavior });
+    }
+    const labelWidth = root.querySelector(".rcell")?.offsetWidth || 0;
+    const left = month.getBoundingClientRect().left - root.getBoundingClientRect().left + root.scrollLeft - labelWidth;
+    if (reducedMotion) root.scrollLeft = left;
+    else root.scrollTo({ left, behavior });
+  });
+}
+
+function updateTimelineMonthFromScroll() {
+  if (timelineNavigationTimer) return;
+  if (timelineScrollFrame) return;
+  timelineScrollFrame = requestAnimationFrame(() => {
+    timelineScrollFrame = 0;
+    const root = $("#plan");
+    if (!root || root.hidden) return;
+    const blocks = [...root.querySelectorAll(".plan-half")];
+    if (!blocks.length) return;
+    const viewportY = window.innerHeight / 2;
+    const block = blocks.reduce((best, item) => {
+      const rect = item.getBoundingClientRect();
+      const distance = Math.abs(rect.top + rect.height / 2 - viewportY);
+      return distance < best.distance ? { item, distance } : best;
+    }, { item: blocks[0], distance: Infinity }).item;
+    const labelWidth = root.querySelector(".rcell")?.offsetWidth || 0;
+    const focusX = root.getBoundingClientRect().left + labelWidth + 12;
+    const months = [...block.querySelectorAll(".month")];
+    const current = months.reduce((best, item) => {
+      const rect = item.getBoundingClientRect();
+      const distance = Math.abs(rect.left + rect.width / 2 - focusX);
+      return distance < best.distance ? { item, distance } : best;
+    }, { item: months[0], distance: Infinity }).item;
+    if (!current) return;
+    const nextIndex = Number(current.dataset.monthIndex);
+    if (nextIndex !== activeTimelineMonth) {
+      activeTimelineMonth = nextIndex;
+      updateTimelineControls();
+    }
+  });
+}
+
+$("#plan")?.addEventListener("scroll", updateTimelineMonthFromScroll, { passive: true });
+window.addEventListener("scroll", updateTimelineMonthFromScroll, { passive: true });
 
 // One event box, always a <button>:
 //   - HoP members: opens the edit dialog,
@@ -116,6 +195,7 @@ export function renderPlan() {
   const root = $("#plan");
   if (!root) return;
   root.replaceChildren();
+  updateTimelineControls();
   // Before the first data arrives (slow connection) say "loading" rather
   // than wrongly claiming the masterplan is empty.
   if (!state.planLoaded) {
@@ -137,15 +217,23 @@ export function renderPlan() {
 
     // Prepare each patrol row: its events, lanes and height. Rows are at
     // least 88 px; a row needing 3+ lanes grows by 40 px per lane.
+    const touchLayout = matchMedia("(max-width: 720px), (pointer: coarse)").matches;
     const rows = ROWS.map(r => {
       const segs = state.plan.filter(ev => ev.row === r.id).map(clip).filter(visible);
       const k = packRow(segs);
-      return { r, segs, height: Math.max(88, k * 40 + 12) };
+      return { r, segs, height: Math.max(touchLayout ? 104 : 88, k * (touchLayout ? 56 : 40) + 12) };
     });
 
     // Block grid: row 1 auto height (month headers), then the patrol rows.
-    const grid = el("div", { class: "plan-half", style: `grid-template-rows:auto ${rows.map(x => x.height + "px").join(" ")}` });
-    grid.append(el("div", { class: "months", style: `--n:${ms.length}` }, ...ms.map(m => el("div", { class: "month", text: m.name }))));
+    const grid = el("div", {
+      class: "plan-half",
+      style: `grid-template-rows:auto ${rows.map(x => x.height + "px").join(" ")};--slots:${ms.length * 2};--month-width:${100 / ms.length}%;--slot-width:${50 / ms.length}%`
+    });
+    const monthHeader = el("div", { class: "months", style: `--n:${ms.length}` },
+      ...ms.map((m, j) => el("div", {
+        class: "month", "data-month-index": String(h * per + j), style: "grid-column:span 2", text: m.name
+      })));
+    grid.append(monthHeader);
 
     rows.forEach(({ r, segs }, ri) => {
       const gr = `grid-row:${ri + 2}`;
@@ -155,7 +243,12 @@ export function renderPlan() {
       //   .track  – positioning context for the event boxes.
       grid.append(el("div", { class: "band", "data-row": r.id, style: gr }));
       // .rcell is the sticky (pinned-left) wrapper; .rlabel is the coloured pill.
-      grid.append(el("div", { class: "rcell", "data-row": r.id, style: gr }, el("div", { class: "rlabel", text: r.label })));
+      grid.append(el("div", { class: "rcell", "data-row": r.id, style: gr },
+        el("div", { class: "rlabel" },
+          el("span", { class: "rlabel-full", text: r.label }),
+          el("span", { class: "rlabel-mobile", text: r.id === "organizacja" ? "Org." : r.label })
+        )
+      ));
       const track = el("div", { class: "track", "data-row": r.id, style: gr });
       segs.forEach(x => track.append(eventNode(x.ev, "ev", boxStyle(x.s - off, x.e - off, cols, x.lane, x.k))));
       grid.append(track);
@@ -177,6 +270,8 @@ export function renderPlan() {
   // pinned labels. Needs a frame so the browser has computed the layout.
   if (!scrolledToToday && now != null) {
     scrolledToToday = true;
+    activeTimelineMonth = Math.floor(now);
+    updateTimelineControls();
     requestAnimationFrame(() => {
       const line = root.querySelector(".today");
       if (!line || root.scrollWidth <= root.clientWidth) return;

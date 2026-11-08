@@ -2,28 +2,30 @@
 <html lang="pl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Harcerska Akcja Letnia 2027 – tablica zadań</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Obóz 7 ŁDW 2027 – tablica zadań</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <!-- All styling lives in css/style.css -->
-<link rel="stylesheet" href="css/style.css?v=2026-11-08">
+<link rel="stylesheet" href="css/style.css?v=2026-11-08-mobile-4">
 </head>
 <!--
   index.html – page skeleton only.
   Almost everything is drawn by JavaScript (js/main.js and the modules it
   imports). Elements with an id are "slots" that the scripts fill in:
-    #tabs, #account   – tab buttons and square login/logout/admin buttons
+    #tabs, #menuToggle, #account – view navigation and account buttons
     #demo, #warn      – demo-mode banner and HoP sensitive-data warning
     #viewName, #barActions – current view title and its action buttons
     #plan, #board     – masterplan and kanban containers (one is hidden)
+    #planControls, #boardControls – mobile navigation controls
   data-board on <body> selects the colour scheme (see css/style.css).
 -->
 <body data-board="plan">
 
 <header class="top">
-  <h1 class="brand">Harcerska Akcja Letnia 2027<small>Masterplan i zadania patroli</small></h1>
+  <h1 class="brand">Obóz 7 ŁDW 2027<small>Masterplan i zadania patroli</small></h1>
+  <button class="menu-toggle" id="menuToggle" type="button" aria-label="Otwórz menu" aria-expanded="false" aria-controls="tabs"><span aria-hidden="true"></span></button>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Wybór widoku"></nav>
   <div class="account" id="account"></div>
 </header>
@@ -40,7 +42,9 @@
   <!-- Shown only when JavaScript is disabled, e.g. when SharePoint embeds the
        page in a sandboxed iframe without "allow-scripts". -->
   <noscript><p class="fatal"><strong>Ta strona wymaga JavaScriptu.</strong> Jeśli widzisz ten komunikat w SharePoincie, otwórz stronę bezpośrednio pod jej adresem albo poproś administratora witryny o zezwolenie na skrypty w osadzonej ramce.</p></noscript>
+  <div class="plan-controls" id="planControls" hidden></div>
   <div class="plan" id="plan"><p class="plan-empty">Ładowanie…</p></div>
+  <div class="board-controls" id="boardControls" hidden></div>
   <div class="board" id="board" hidden></div>
 </main>
 
@@ -113,6 +117,6 @@
   The ?v= suffix forces browsers to fetch the new file after an update;
   change it whenever you deploy a new version.
 -->
-<script type="module" src="js/main.js?v=2026-11-08" onerror="window.__halFail('Nie udało się wczytać plików aplikacji.', 'Sprawdź, czy na serwerze są foldery css i js z całą zawartością (także js/store) i czy nazwy plików się zgadzają. Potem odśwież stronę (Ctrl+F5).', 'load')"></script>
+<script type="module" src="js/main.js?v=2026-11-08-mobile-4" onerror="window.__halFail('Nie udało się wczytać plików aplikacji.', 'Sprawdź, czy na serwerze są foldery css i js z całą zawartością (także js/store) i czy nazwy plików się zgadzają. Potem odśwież stronę (Ctrl+F5).', 'load')"></script>
 </body>
 </html>

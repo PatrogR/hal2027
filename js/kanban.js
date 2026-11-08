@@ -20,6 +20,7 @@ import { state, act } from "./state.js";
 // ID of the card currently being dragged (null when not dragging). Used to
 // ignore drags of other things, e.g. text or files dropped onto the board.
 let dragId = null;
+let activeColumnIndex = 0;
 
 /* ---------- Rendering ---------- */
 
@@ -28,6 +29,18 @@ let dragId = null;
 export function renderBoard() {
   const root = $("#board");
   if (!root) return;
+  const controls = $("#boardControls");
+  if (controls) {
+    controls.replaceChildren(
+      el("button", { class: "btn ghost small", type: "button", text: "‹", "aria-label": "Poprzednia kolumna", onclick: () => scrollBoardColumn(activeColumnIndex - 1) }),
+      el("span", { class: "board-position", "aria-live": "polite" }),
+      el("button", { class: "btn ghost small", type: "button", text: "›", "aria-label": "Następna kolumna", onclick: () => scrollBoardColumn(activeColumnIndex + 1) })
+    );
+  }
+  if (!root.dataset.mobileControlsBound) {
+    root.addEventListener("scroll", updateActiveColumn, { passive: true });
+    root.dataset.mobileControlsBound = "true";
+  }
   root.replaceChildren();
   for (const c of COLUMNS) {
     const items = state.tasks.filter(t => t.column === c.id);
@@ -40,25 +53,52 @@ export function renderBoard() {
       el("button", { class: "add", type: "button", text: "+ Dodaj zadanie", onclick: () => openTask(null, c.id) })
     ));
   }
+  updateActiveColumn();
+}
+
+function updateActiveColumn() {
+  const root = $("#board"), controls = $("#boardControls");
+  if (!root || !controls) return;
+  const columns = [...root.querySelectorAll(".col")];
+  if (!columns.length) return;
+  const center = root.getBoundingClientRect().left + root.clientWidth / 2;
+  activeColumnIndex = columns.reduce((best, column, index) => {
+    const rect = column.getBoundingClientRect();
+    const distance = Math.abs(rect.left + rect.width / 2 - center);
+    return distance < best.distance ? { index, distance } : best;
+  }, { index: 0, distance: Infinity }).index;
+  controls.querySelector(".board-position")?.replaceChildren(
+    document.createTextNode(`${activeColumnIndex + 1} z ${columns.length} · ${COLUMNS[activeColumnIndex].name}`)
+  );
+  const [previous, next] = controls.querySelectorAll("button");
+  if (previous) previous.disabled = activeColumnIndex === 0;
+  if (next) next.disabled = activeColumnIndex === columns.length - 1;
+}
+
+function scrollBoardColumn(index) {
+  const root = $("#board"), columns = root ? [...root.querySelectorAll(".col")] : [];
+  if (!root || !columns.length) return;
+  activeColumnIndex = Math.max(0, Math.min(columns.length - 1, index));
+  const left = columns[activeColumnIndex].getBoundingClientRect().left - root.getBoundingClientRect().left + root.scrollLeft - 12;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) root.scrollLeft = left;
+  else root.scrollTo({ left, behavior: "smooth" });
+  updateActiveColumn();
 }
 
 /**
- * One task card. It is a <div role="button" tabindex="0"> rather than a
- * <button>, because draggable buttons behave badly in some browsers; the
- * role/tabindex/keydown make it keyboard- and screen-reader-accessible.
+ * One task card. The card itself remains draggable, while its title is a
+ * regular button so it can be opened with a keyboard without nesting controls.
  * Deadline state ("soon"/"overdue") is added as a CSS class for colouring.
  */
 export function cardEl(t) {
   const due = deadlineState(t);
   const card = el("div", {
-    class: `card ${due}`.trim(), role: "button", tabindex: "0", draggable: "true", "data-id": t.id,
-    "aria-label": `${t.title}. Otwórz zadanie`,
-    onclick: () => openTask(t),
-    onkeydown: e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTask(t); } },
+    class: `card ${due}`.trim(), draggable: "true", "data-id": t.id,
+    onclick: e => { if (!e.target.closest("button")) openTask(t); },
     ondragstart: e => { dragId = t.id; card.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", t.id); },
     ondragend: () => { dragId = null; card.classList.remove("dragging"); clearMarks(); }
   },
-    el("h3", { text: t.title }),
+    el("h3", {}, el("button", { class: "card-title", type: "button", text: t.title, onclick: () => openTask(t), "aria-label": `Edytuj zadanie: ${t.title}` })),
     t.description ? el("p", { text: t.description }) : null,
     // .meta is hidden by CSS when empty (no owner and no deadline).
     el("div", { class: "meta" },
@@ -70,7 +110,7 @@ export function cardEl(t) {
 
 /* ---------- Drag & drop (desktop) ----------
  * Uses the native HTML5 drag-and-drop API. It does not work with touch, so on
- * phones cards are moved with the "Kolumna" (column) field in the task dialog.
+ * phones cards can be moved through the task dialog.
  */
 
 // Removes the blue/coloured insertion line(s) shown while dragging.
