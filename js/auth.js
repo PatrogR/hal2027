@@ -76,7 +76,7 @@ export function openLogin({ onCancel } = {}) {
       } finally { btn.disabled = false; }
     }
   },
-    el("h2", { id: "l-h", text: "Logowanie Patrolowej" }),
+    el("h2", { id: "l-h", text: "Logowianie Patrolowi" }),
     el("label", { for: "l-login", text: "Login" }), loginIn,
     el("label", { for: "l-pwd", text: "Hasło" }), pwdIn,
     err,
