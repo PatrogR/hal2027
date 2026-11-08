@@ -14,7 +14,7 @@
 import { normLogin } from "./config.js?v=2026-11-08-patrolowa";
 import { $, el, iconButton, openModal, authMsg } from "./ui.js";
 import { state } from "./state.js";
-import { openAdmin } from "./admin.js?v=2026-11-08-patrolowa";
+import { openAdmin } from "./admin.js?v=2026-11-08-guest-log";
 
 /**
  * Redraws everything that depends on being logged in:

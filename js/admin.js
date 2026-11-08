@@ -162,7 +162,7 @@ export function openAdmin() {
       }
       rows.push(el("tr", {},
         el("td", { class: "nowrap", text: fmt(entry.at) }),
-        el("td", { text: entry.login }),
+        entry.uid ? el("td", { text: entry.login }) : el("td", { class: "hint", text: "Gość" }),
         el("td", { text: entry.action }),
         el("td", { text: displayDetails(entry.details) })
       ));

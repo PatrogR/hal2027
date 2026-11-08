@@ -71,6 +71,9 @@ ominąć ekran, więc nie traktuj go jako ochrony danych.
   „Gotowe”, anulować zatwierdzenie w formularzu zadania oraz usuwać zadania.
   Te ograniczenia są sprawdzane również przez
   `firestore.rules`, nie tylko przez interfejs.
+- Działania gości (dodanie, edycja i przeniesienie zadania) trafiają do
+  dziennika jako „Gość”. Goście nie mają kont, więc wpisów nie da się
+  przypisać do konkretnej osoby.
 
 ## Wdrożenie
 

@@ -22,7 +22,7 @@ import { $, el, openClosers } from "./ui.js";
 import { state } from "./state.js";
 import { createFirebaseStore } from "./store/firebase.js";
 import { createDemoStore } from "./store/demo.js";
-import { openLogin, renderAccount } from "./auth.js?v=2026-11-08-cancel-gate";
+import { openLogin, renderAccount } from "./auth.js?v=2026-11-08-guest-log";
 import { openView, viewFromHash } from "./views.js?v=2026-11-08-patrolowa";
 
 // Shows a start-up error on the page. Uses the safety net from index.html;
