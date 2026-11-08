@@ -102,6 +102,25 @@ let scrolledToToday = false;
 let activeTimelineMonth = Math.max(0, Math.floor(todayPosition() ?? 0));
 let timelineScrollFrame = 0;
 let timelineNavigationTimer = 0;
+const patrolLabelObserver = new ResizeObserver(entries => entries.forEach(({ target }) => fitPatrolLabel(target)));
+
+function fitPatrolLabel(label) {
+  const full = label.querySelector(".rlabel-full");
+  const short = label.querySelector(".rlabel-short");
+  if (!full || !short) return;
+  const style = getComputedStyle(label);
+  const available = style.writingMode === "horizontal-tb" ? label.clientWidth : label.clientHeight;
+  const canvas = fitPatrolLabel.canvas || (fitPatrolLabel.canvas = document.createElement("canvas"));
+  const context = canvas.getContext("2d");
+  if (!context) return;
+  context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+  const letterSpacing = parseFloat(style.letterSpacing) || 0;
+  const text = style.textTransform === "uppercase" ? full.textContent.toLocaleUpperCase() : full.textContent;
+  const required = context.measureText(text).width + letterSpacing * text.length;
+  const fits = required <= available - 16;
+  full.hidden = !fits;
+  short.hidden = fits;
+}
 
 function updateTimelineControls() {
   const controls = $("#planControls");
@@ -194,6 +213,7 @@ export function eventNode(ev, cls, style) {
 export function renderPlan() {
   const root = $("#plan");
   if (!root) return;
+  patrolLabelObserver.disconnect();
   root.replaceChildren();
   updateTimelineControls();
   // Before the first data arrives (slow connection) say "loading" rather
@@ -243,12 +263,12 @@ export function renderPlan() {
       //   .track  – positioning context for the event boxes.
       grid.append(el("div", { class: "band", "data-row": r.id, style: gr }));
       // .rcell is the sticky (pinned-left) wrapper; .rlabel is the coloured pill.
-      grid.append(el("div", { class: "rcell", "data-row": r.id, style: gr },
-        el("div", { class: "rlabel" },
-          el("span", { class: "rlabel-full", text: r.label }),
-          el("span", { class: "rlabel-mobile", text: r.id === "organizacja" ? "Org." : r.label })
-        )
-      ));
+      const label = el("div", { class: "rlabel", title: r.label, "aria-label": r.label },
+        el("span", { class: "rlabel-full", text: r.label }),
+        el("span", { class: "rlabel-short", text: r.id === "organizacja" ? "Org." : r.label, hidden: true })
+      );
+      grid.append(el("div", { class: "rcell", "data-row": r.id, style: gr }, label));
+      patrolLabelObserver.observe(label);
       const track = el("div", { class: "track", "data-row": r.id, style: gr });
       segs.forEach(x => track.append(eventNode(x.ev, "ev", boxStyle(x.s - off, x.e - off, cols, x.lane, x.k))));
       grid.append(track);

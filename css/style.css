@@ -127,7 +127,10 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .due.soon { background: #E8890C; color: #fff; }
 .due.overdue { background: var(--red); color: #fff; }
 .owner::before { content: ""; flex: none; width: .6em; height: .6em; border-radius: 50%; background: var(--c); }
-.col[data-col="done"] .card { opacity: .6; }
+.col[data-col="done"] .card { background: #F1F7E5; border-color: #B5CA86; }
+.col[data-col="done"] .card h3 { color: #64743C; }
+.col[data-col="done"] .card p, .col[data-col="done"] .card .owner { color: #68705B; }
+.approve-task { align-self: flex-start; margin-top: 10px; }
 .card.dragging { opacity: .35; }
 /* Insertion line shown while dragging a card. */
 .drop-mark { flex: none; height: 4px; border-radius: 2px; background: var(--c); margin: -7px 0; }
@@ -167,7 +170,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   background: var(--rc); border: 3px solid var(--rd); border-radius: 14px;
   color: #fff; font-weight: 900; font-size: .95rem; text-transform: uppercase; letter-spacing: .02em;
 }
-.rlabel-mobile { display: none; }
+.rlabel-short[hidden], .rlabel-full[hidden] { display: none; }
 .track {
   grid-column: 2; position: relative;
   background-image:
@@ -213,6 +216,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--c); outline: non
 textarea { min-height: 120px; resize: vertical; line-height: 1.45; }
 .err { color: var(--red-t); font-weight: 700; font-size: .85rem; min-height: 1.3em; margin: 6px 0 0; }
 .hint { color: var(--muted); font-size: .85rem; font-weight: 600; margin: 6px 0 0; }
+.save-warning { margin-top: 12px; padding: 12px; border: 2px solid var(--red); border-radius: 12px; background: #FBE9EA; }
+.save-warning p { margin: 4px 0 0; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
 
 /* Button variants: default = current board colour, .ghost = neutral,
@@ -330,8 +335,6 @@ td.nowrap { white-space: nowrap; }
     width: 100%; height: calc(100% - 12px); padding: .35em .1em; border-radius: 12px;
     writing-mode: vertical-rl; text-orientation: mixed; font-size: .66rem; letter-spacing: 0;
   }
-  .rlabel-full { display: none; }
-  .rlabel-mobile { display: inline; }
 
   .overlay { overflow-y: auto; place-items: center; padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
   .modal { max-height: calc(100vh - 16px); max-height: calc(100dvh - max(16px, env(safe-area-inset-top) + env(safe-area-inset-bottom))); padding: 16px; }

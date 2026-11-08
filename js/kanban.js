@@ -50,7 +50,9 @@ export function renderBoard() {
     root.append(el("section", { class: "col", "data-col": c.id, "aria-label": c.name },
       el("h3", { class: "col-head" }, c.name, el("span", { class: "count", text: String(items.length) })),
       list,
-      el("button", { class: "add", type: "button", text: "+ Dodaj zadanie", onclick: () => openTask(null, c.id) })
+      state.me || c.id !== "done"
+        ? el("button", { class: "add", type: "button", text: "+ Dodaj zadanie", onclick: () => openTask(null, c.id) })
+        : null
     ));
   }
   updateActiveColumn();
@@ -93,7 +95,7 @@ function scrollBoardColumn(index) {
 export function cardEl(t) {
   const due = deadlineState(t);
   const card = el("div", {
-    class: `card ${due}`.trim(), draggable: "true", "data-id": t.id,
+    class: `card ${due}`.trim(), draggable: state.me || t.column !== "done" ? "true" : "false", "data-id": t.id,
     onclick: e => { if (!e.target.closest("button")) openTask(t); },
     ondragstart: e => { dragId = t.id; card.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", t.id); },
     ondragend: () => { dragId = null; card.classList.remove("dragging"); clearMarks(); }
@@ -103,7 +105,20 @@ export function cardEl(t) {
     // .meta is hidden by CSS when empty (no owner and no deadline).
     el("div", { class: "meta" },
       t.owner ? el("div", { class: "owner", text: t.owner }) : null,
-      t.deadline ? el("span", { class: `due ${due}`.trim(), text: `${due === "overdue" ? "Po terminie" : "Deadline"}: ${fmtDate(t.deadline)}` }) : null)
+      t.deadline ? el("span", { class: `due ${due}`.trim(), text: `${due === "overdue" ? "Po terminie" : "Deadline"}: ${fmtDate(t.deadline)}` }) : null),
+    state.me && t.column === "review"
+      ? el("button", {
+        class: "btn small approve-task", type: "button", text: "Zatwierdź",
+        onclick: e => {
+          e.stopPropagation();
+          act(
+            state.store.updateTask(state.view, t.id, { column: "done", order: endOrder("done") }),
+            "Zatwierdzenie zadania",
+            `${VIEWS[state.view].name}: ${quote(t.title)}`
+          ).catch(() => {});
+        }
+      })
+      : null
   );
   return card;
 }
@@ -130,7 +145,7 @@ export function bindDrop(list) {
   // While dragging over the list: allow dropping (preventDefault) and show
   // an insertion line where the card would land.
   list.addEventListener("dragover", e => {
-    if (!dragId) return;
+    if (!dragId || (!state.me && list.dataset.col === "done")) return;
     e.preventDefault();
     clearMarks();
     const cards = [...list.querySelectorAll(".card:not(.dragging)")];
@@ -146,6 +161,7 @@ export function bindDrop(list) {
     e.preventDefault();
     const id = dragId; if (!id) return;
     const column = list.dataset.col;
+    if (!state.me && column === "done") return;
     const i = dropIndex(list, e.clientY);
     clearMarks();
 
@@ -213,24 +229,40 @@ export function openTask(task, presetColumn) {
   descIn.value = task?.description || "";   // textarea content is set via .value, not an attribute
   const ownerIn = el("input", { id: "f-owner", maxlength: "100", value: task?.owner || "" });
   const deadlineIn = el("input", { id: "f-deadline", type: "date", value: task?.deadline || "" });
-  const colIn = el("select", { id: "f-col" },
-    ...COLUMNS.map(c => el("option", { value: c.id, selected: c.id === (task?.column || presetColumn) }, c.name)));
+  const isMember = !!state.me;
+  const defaultColumn = !isMember && presetColumn === "done" ? "todo" : task?.column || presetColumn;
+  const colOptions = COLUMNS.filter(c => isMember || c.id !== "done" || task?.column === "done");
+  const colIn = el("select", { id: "f-col", disabled: !isMember && task?.column === "done" },
+    ...colOptions.map(c => el("option", { value: c.id, selected: c.id === defaultColumn }, c.name)));
   const err = el("p", { class: "err" });
+  const saveWarning = el("div", { class: "save-warning", role: "alert", hidden: true },
+    el("strong", { text: "Czy na pewno zapisać?" }),
+    el("p", { text: "Nie będziesz mógł po tym już usunąć zadania." }),
+    el("div", { class: "actions" },
+      el("button", { class: "btn ghost", type: "button", text: "Wróć do edycji", onclick: () => { saveWarning.hidden = true; titleIn.focus(); } }),
+      el("button", { class: "btn", type: "button", text: "Tak, zapisz zadanie", onclick: () => saveTask() })
+    )
+  );
   let close;
   const where = VIEWS[board].name;   // board name for the activity log
+
+  const saveTask = () => {
+    const title = titleIn.value.trim();
+    if (!title) { err.textContent = "Wpisz tytuł zadania."; titleIn.focus(); return; }
+    const data = { title, description: descIn.value.trim(), owner: ownerIn.value.trim(), deadline: deadlineIn.value || "", column: colIn.value };
+    if (isNew || data.column !== task.column) data.order = endOrder(data.column);
+    act(isNew ? state.store.addTask(board, data) : state.store.updateTask(board, task.id, data),
+      isNew ? "Dodanie zadania" : "Edycja zadania", `${where}: ${quote(title)}`).catch(() => {});
+    close();
+  };
 
   const form = el("form", {
     "aria-labelledby": "m-title",
     onsubmit: e => {
       e.preventDefault();
-      const title = titleIn.value.trim();
-      if (!title) { err.textContent = "Wpisz tytuł zadania."; titleIn.focus(); return; }
-      const data = { title, description: descIn.value.trim(), owner: ownerIn.value.trim(), deadline: deadlineIn.value || "", column: colIn.value };
-      // New task, or moved to another column via the dropdown → put it last.
-      if (isNew || data.column !== task.column) data.order = endOrder(data.column);
-      act(isNew ? state.store.addTask(board, data) : state.store.updateTask(board, task.id, data),
-        isNew ? "Dodanie zadania" : "Edycja zadania", `${where}: ${quote(title)}`).catch(() => {});
-      close();
+      if (!titleIn.value.trim()) { err.textContent = "Wpisz tytuł zadania."; titleIn.focus(); return; }
+      if (isNew && !isMember) { saveWarning.hidden = false; saveWarning.querySelector("button:last-child").focus(); return; }
+      saveTask();
     }
   },
     el("h2", { id: "m-title", text: isNew ? "Nowe zadanie" : "Edytuj zadanie" }),
@@ -241,8 +273,22 @@ export function openTask(task, presetColumn) {
       el("div", {}, el("label", { for: "f-deadline", text: "Deadline (opcjonalnie)" }), deadlineIn)),
     el("label", { for: "f-col", text: "Kolumna" }), colIn,
     err,
+    saveWarning,
     el("div", { class: "actions" },
-      isNew ? null : deleteButton(() => { act(state.store.removeTask(board, task.id), "Usunięcie zadania", `${where}: ${quote(task.title)}`).catch(() => {}); close(); }),
+      !isNew && isMember && task.column === "done"
+        ? el("button", {
+          class: "btn ghost", type: "button", text: "Anuluj zatwierdzenie",
+          onclick: () => {
+            act(
+              state.store.updateTask(board, task.id, { column: "review", order: endOrder("review") }),
+              "Anulowanie zatwierdzenia zadania",
+              `${where}: ${quote(task.title)}`
+            ).catch(() => {});
+            close();
+          }
+        })
+        : null,
+      isNew || !isMember ? null : deleteButton(() => { act(state.store.removeTask(board, task.id), "Usunięcie zadania", `${where}: ${quote(task.title)}`).catch(() => {}); close(); }),
       el("button", { class: "btn ghost", type: "button", text: "Anuluj", onclick: () => close() }),
       el("button", { class: "btn", type: "submit", text: isNew ? "Dodaj zadanie" : "Zapisz zmiany" })
     )

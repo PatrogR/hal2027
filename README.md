@@ -51,6 +51,18 @@ działa tryb podglądu (konta testowe: admin / demo, hop / demo).
 - Przycisk logowania ma stonowaną ikonę wejścia zamiast kłódki.
 - Po zalogowaniu HoP jest widoczna czerwona plakietka statusu zamiast ramki
   wokół całej strony; administratora oznacza ikona panelu.
+- Etykieta „Organizacja” w masterplanie skraca się do „Org.”, jeśli pełna
+  nazwa nie mieści się w dostępnej przestrzeni.
+
+## Uprawnienia zadań kanban
+
+- Goście mogą tworzyć i edytować zadania oraz przenosić je między kolumnami
+  do „Do sprawdzenia”. Przy tworzeniu aplikacja prosi o potwierdzenie zapisu;
+  goście nie mogą usuwać zadań.
+- HoP i administratorzy mogą zatwierdzać zadania z „Do sprawdzenia” do
+  „Gotowe”, anulować zatwierdzenie w formularzu zadania oraz usuwać zadania.
+  Te ograniczenia są sprawdzane również przez
+  `firestore.rules`, nie tylko przez interfejs.
 
 ## Wdrożenie
 

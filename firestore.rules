@@ -10,7 +10,8 @@
 // Test:   use the "Rules Playground" on the same page before publishing.
 //
 // Access summary:
-//   patrol boards (program/kwaterka/organizacja) – anyone with the link
+//   patrol boards (program/kwaterka/organizacja) – anyone reads/writes before review;
+//     active HoP and admin members may approve into "done" or delete
 //   HoP board, masterplan editing                – active HoP members
 //   masterplan reading                           – everyone
 //   member accounts, activity log reading        – admins only
@@ -44,6 +45,14 @@ service cloud.firestore {
     // The three public patrol boards. Must match the view ids in js/config.js.
     function isPatrolBoard(board) {
       return board in ['program', 'kwaterka', 'organizacja'];
+    }
+
+    // Guests may create and update tasks until review. Only active members
+    // (HoP or admin) may move tasks into or out of "done".
+    function guestTaskColumnAllowed() {
+      return resource.data.column == 'done'
+        ? request.resource.data.column == 'done'
+        : request.resource.data.column != 'done';
     }
 
     // ---------- Data validation ----------
@@ -88,8 +97,16 @@ service cloud.firestore {
     // ---------- Kanban boards: patrols open to all, HoP board members only ----------
     // Path: boards/{board}/tasks/{task}. Any other board name is rejected.
     match /boards/{board}/tasks/{task} {
-      allow read, delete: if isPatrolBoard(board) || (board == 'hop' && isMember());
-      allow create, update: if (isPatrolBoard(board) || (board == 'hop' && isMember())) && validTask();
+      allow read: if isPatrolBoard(board) || (board == 'hop' && isMember());
+      allow create: if validTask() && (
+        (isPatrolBoard(board) && (isMember() || request.resource.data.column != 'done'))
+        || (board == 'hop' && isMember())
+      );
+      allow update: if validTask() && (
+        (isPatrolBoard(board) && (isMember() || guestTaskColumnAllowed()))
+        || (board == 'hop' && isMember())
+      );
+      allow delete: if isMember() && (isPatrolBoard(board) || board == 'hop');
     }
 
     // ---------- Masterplan: everyone reads, HoP members edit ----------
