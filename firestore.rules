@@ -12,6 +12,7 @@
 //   Patrolowa board, masterplan editing            – active Patrolowe/admin members
 //   masterplan reading                           – everyone
 //   member accounts, activity log reading        – admins only
+//   activity log writing                         – members as themselves, guests as "gość" (task actions only)
 // ===========================================================================
 rules_version = '2';
 service cloud.firestore {
@@ -127,18 +128,33 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ---------- Activity log: written by members, read by admins ----------
+    // ---------- Activity log: written by members and guests, read by admins ----------
+    // Shape shared by every log entry; the timestamp must be the server's time.
+    function validLogEntry() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['uid', 'login', 'action', 'details', 'at'])
+        && d.action is string && d.action.size() <= 60
+        && d.details is string && d.details.size() <= 300
+        && d.at == request.time;
+    }
+
     match /logs/{logId} {
       allow read: if isAdmin();
       // A member can only log as THEMSELVES (uid and login must match their
-      // member document) and the timestamp must be the server's time.
-      allow create: if isMember()
-        && request.resource.data.keys().hasOnly(['uid', 'login', 'action', 'details', 'at'])
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.login == get(memberPath()).data.login
-        && request.resource.data.action is string && request.resource.data.action.size() <= 60
-        && request.resource.data.details is string && request.resource.data.details.size() <= 300
-        && request.resource.data.at == request.time;
+      // member document).
+      // A guest (not signed in) can only log as the anonymous "gość" with an
+      // empty uid, and only the task actions guests are allowed to perform
+      // (= action names used in js/kanban.js). Guest entries cannot be
+      // attributed to a person and anyone can write them.
+      allow create: if validLogEntry() && (
+        (isMember()
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.login == get(memberPath()).data.login)
+        || (request.auth == null
+          && request.resource.data.uid == ''
+          && request.resource.data.login == 'gość'
+          && request.resource.data.action in ['Dodanie zadania', 'Edycja zadania', 'Przeniesienie zadania'])
+      );
       // Log entries are append-only: nobody can edit or delete them.
       allow update, delete: if false;
     }

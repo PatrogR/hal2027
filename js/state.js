@@ -20,9 +20,13 @@ export const state = {
   warnHidden: false  // Patrolowa closed the "no sensitive data" bar (until page reload)
 };
 
+// Identity used in the activity log for actions of guests (not logged in).
+// firestore.rules accept exactly this uid/login for unauthenticated writers.
+export const GUEST = { uid: "", login: "gość" };
+
 /**
- * Runs a database operation and, if it succeeds and a Patrolowa is logged in
- * in, writes an entry to the activity log ("logs" collection).
+ * Runs a database operation and, if it succeeds, writes an entry to the
+ * activity log ("logs" collection) – as the logged-in Patrolowa, or as GUEST.
  *
  *   act(state.store.addTask(board, data), "Dodanie zadania", "Program: „Title”")
  *
@@ -31,7 +35,9 @@ export const state = {
  * - `details`  – optional extra text (truncated to 300 chars, the limit
  *                enforced by firestore.rules).
  *
- * Guest actions are not logged (guests have no identity). Logging failures
+ * Guest actions are logged as GUEST (login "gość"); guests have no identity,
+ * so all their entries look the same. firestore.rules only allow guests to
+ * log task actions (add / edit / move), the only things they can do. Logging failures
  * are ignored on purpose: a failed log entry must not look like a failed
  * save to the user. On error the user sees a toast, and the error is
  * re-thrown so callers can react; callers that don't care add .catch(() => {}).
@@ -41,6 +47,6 @@ export const state = {
  */
 export function act(promise, action, details = "") {
   return promise
-    .then(() => { if (state.me) state.store.log(state.me, action, String(details).slice(0, 300)).catch(() => {}); })
+    .then(() => { state.store.log(state.me || GUEST, action, String(details).slice(0, 300)).catch(() => {}); })
     .catch(e => { toast(errMsg(e)); throw e; });
 }
