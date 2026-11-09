@@ -129,10 +129,8 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .count { background: #fff; color: var(--grey-d); border-radius: 999px; min-width: 1.7em; padding: 0 .45em; font-size: .78em; line-height: 1.7; text-align: center; }
 .list { flex: 1; min-height: 70px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px 3px; }
 .card { background: var(--paper); border: 2.5px solid var(--c); border-radius: 12px; padding: 10px 12px; cursor: grab; user-select: none; }
-/* Deadline highlighting: .soon = within 3 days (orange), .overdue = red tint. */
+/* Deadline highlighting is limited to the deadline label. */
 .card:not(.soon):not(.overdue):hover { background: #fff; }
-.card.soon { background: #FFF4E5; }
-.card.overdue { background: #FCE8E9; }
 .card h3 { margin: 0; font-size: 1rem; font-weight: 800; line-height: 1.3; color: var(--c-t); overflow-wrap: anywhere; }
 .card-title { width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
 .card p {

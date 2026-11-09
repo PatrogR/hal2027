@@ -90,7 +90,7 @@ function scrollBoardColumn(index) {
 /**
  * One task card. The card itself remains draggable, while its title is a
  * regular button so it can be opened with a keyboard without nesting controls.
- * Deadline state ("soon"/"overdue") is added as a CSS class for colouring.
+ * Deadline state ("soon"/"overdue") is added to the deadline label for colouring.
  */
 export function cardEl(t) {
   const due = deadlineState(t);
